@@ -1,0 +1,71 @@
+{
+  "num_drivers": 3,
+  "num_work_days": 12,
+  "total_stops_planned": 855,
+  "gas_per_km_sar": 0.25,
+  "driver_hourly_sar": 12.5,
+  "planner_hourly_sar": 20.83,
+  "current_daily_km_fleet": 600.0,
+  "planned_daily_km_fleet": 79.8,
+  "delta_daily_km_fleet": 520.2,
+  "current_road_h_per_driver_day": 3.33,
+  "planned_road_h_per_driver_day_avg": 0.96,
+  "delta_road_h_fleet_per_day": 7.13,
+  "current_visits_per_day_fleet": 60,
+  "planned_visits_per_day_fleet": 71.25,
+  "delta_visits_per_day_fleet": 11.25,
+  "total_per_day_sar": 1445.39,
+  "total_per_2_weeks_sar": 17344.7,
+  "total_per_month_sar": 34689.39,
+  "items": [
+    {
+      "label": "Gas saving",
+      "per_day_sar": 130.05833333333334,
+      "per_2_weeks_sar": 1560.7,
+      "per_month_sar": 3121.4,
+      "note": "520 km/day × 0.250 SAR/km"
+    },
+    {
+      "label": "Driver time saving",
+      "per_day_sar": 89.14253472222222,
+      "per_2_weeks_sar": 1069.7104166666668,
+      "per_month_sar": 2139.4208333333336,
+      "note": "7.1 h/day × 12.50 SAR/h"
+    },
+    {
+      "label": "Planning time saving",
+      "per_day_sar": 20.833333333333332,
+      "per_2_weeks_sar": 250.0,
+      "per_month_sar": 500.0,
+      "note": "1 h/day × 20.83 SAR/h"
+    },
+    {
+      "label": "Vehicle maintenance savings",
+      "per_day_sar": 0.0,
+      "per_2_weeks_sar": 0.0,
+      "per_month_sar": 0.0,
+      "note": "Listed qualitatively — not calculated (fewer km → less wear, deferred capex)."
+    },
+    {
+      "label": "Extra revenue from more visits",
+      "per_day_sar": 1205.357142857143,
+      "per_2_weeks_sar": 14464.285714285714,
+      "per_month_sar": 28928.571428571428,
+      "note": "+11.2 visits/day × 107.14 SAR/store/day"
+    },
+    {
+      "label": "Consistency benefit",
+      "per_day_sar": 0.0,
+      "per_2_weeks_sar": 0.0,
+      "per_month_sar": 0.0,
+      "note": "Listed qualitatively — stable routes build customer relationships."
+    },
+    {
+      "label": "Driver morale / ownership",
+      "per_day_sar": 0.0,
+      "per_2_weeks_sar": 0.0,
+      "per_month_sar": 0.0,
+      "note": "Listed qualitatively — predictable routes reduce fatigue and turnover."
+    }
+  ]
+}

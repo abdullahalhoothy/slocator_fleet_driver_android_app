@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Stylized location pin with an "S" cut-out, rendered in Royal Purple -> Emerald gradient -->
+    <group android:translateX="0" android:translateY="0">
+        <path
+            android:pathData="M54,28
+                C42.954,28 34,36.954 34,48
+                C34,62 54,82 54,82
+                C54,82 74,62 74,48
+                C74,36.954 65.046,28 54,28Z">
+            <aapt:attr xmlns:aapt="http://schemas.android.com/aapt" name="android:fillColor">
+                <gradient
+                    android:type="linear"
+                    android:startX="34" android:startY="28"
+                    android:endX="74" android:endY="82"
+                    android:startColor="#8B5CF6"
+                    android:endColor="#10B981" />
+            </aapt:attr>
+        </path>
+        <!-- inner ring -->
+        <path
+            android:pathData="M54,40
+                C49.582,40 46,43.582 46,48
+                C46,52.418 49.582,56 54,56
+                C58.418,56 62,52.418 62,48
+                C62,43.582 58.418,40 54,40Z"
+            android:fillColor="#0E0E12" />
+        <!-- "S" mark inside -->
+        <path
+            android:pathData="M52.4,44.6
+                C50.7,44.6 49.4,45.6 49.4,46.9
+                C49.4,48.0 50.1,48.6 51.7,49.0
+                L53.4,49.4
+                C54.4,49.6 54.7,49.9 54.7,50.4
+                C54.7,51.0 54.0,51.4 52.9,51.4
+                C51.6,51.4 50.7,50.9 50.5,50.0
+                L48.6,50.0
+                C48.8,52.0 50.4,53.2 52.8,53.2
+                C55.4,53.2 57.0,51.9 57.0,50.1
+                C57.0,48.8 56.2,48.0 54.4,47.6
+                L52.9,47.3
+                C52.0,47.1 51.6,46.8 51.6,46.3
+                C51.6,45.8 52.2,45.4 53.1,45.4
+                C54.0,45.4 54.7,45.8 54.9,46.6
+                L56.7,46.6
+                C56.5,44.9 55.0,43.8 53.0,43.8Z"
+            android:fillColor="#10B981" />
+    </group>
+</vector>

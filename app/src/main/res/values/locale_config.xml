@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    NOTE: The real locale config is at res/xml/locales_config.xml and is referenced
+    by AndroidManifest.xml's android:localeConfig. This file is intentionally an
+    empty <resources> placeholder so the previous incorrectly-typed asset doesn't
+    break the build. Safe to delete.
+-->
+<resources>
+</resources>

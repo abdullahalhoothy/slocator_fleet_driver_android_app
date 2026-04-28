@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Brand palette: Royal Purple + Emerald on Obsidian -->
+    <color name="brand_purple">#6B46C1</color>
+    <color name="brand_purple_light">#8B5CF6</color>
+    <color name="brand_purple_dim">#3B2270</color>
+    <color name="brand_emerald">#10B981</color>
+    <color name="brand_emerald_dim">#0A6E4F</color>
+
+    <color name="obsidian">#0E0E12</color>
+    <color name="obsidian_elevated">#16161D</color>
+    <color name="obsidian_card">#1B1B25</color>
+    <color name="obsidian_outline">#2A2A36</color>
+
+    <color name="text_primary">#F5F5F7</color>
+    <color name="text_secondary">#A6A6B0</color>
+    <color name="text_disabled">#5A5A66</color>
+
+    <color name="status_done_bg">#0A2E22</color>
+    <color name="status_done_fg">#10B981</color>
+</resources>

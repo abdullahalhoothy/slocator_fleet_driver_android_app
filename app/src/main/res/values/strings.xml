@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- English (secondary). Arabic (values-ar/strings.xml) is the default. -->
+    <string name="app_name">S-Locator Fleet Driver</string>
+    <string name="app_brand_short">S-LOCATOR</string>
+    <string name="app_brand_subtitle">Fleet Driver</string>
+
+    <!-- Login -->
+    <string name="login_welcome">Welcome</string>
+    <string name="login_instruction">Enter your phone number to view today\'s routes</string>
+    <string name="login_phone_label">Phone Number</string>
+    <string name="login_phone_hint">e.g. +966 5X XXX XXXX</string>
+    <string name="login_button">Continue</string>
+    <string name="login_error_empty">Please enter your phone number</string>
+    <string name="login_error_not_found">No routes found for this number. Check the number and try again.</string>
+    <string name="login_loading">Loading your routes…</string>
+    <string name="login_offline_hint">No internet? Cached routes will still load.</string>
+
+    <!-- Routes -->
+    <string name="routes_today_label">Today</string>
+    <string name="routes_part_label">Part %1$d</string>
+    <string name="routes_stops_count">%1$d stops</string>
+    <string name="routes_done">Done</string>
+    <string name="routes_open_in_maps">Open in Google Maps</string>
+    <string name="routes_no_today">No routes scheduled for today.</string>
+    <string name="routes_logout">Sign Out</string>
+    <string name="routes_refresh">Refresh</string>
+    <string name="routes_refreshing">Refreshing…</string>
+    <string name="routes_last_synced">Last synced: %1$s</string>
+    <string name="routes_completion_progress">%1$d of %2$d completed</string>
+
+    <!-- Errors -->
+    <string name="error_network">Couldn\'t reach the server. Showing your last saved routes.</string>
+    <string name="error_no_data">No routes available yet.</string>
+    <string name="error_no_maps">Google Maps isn\'t installed on this device.</string>
+
+    <!-- Language toggle -->
+    <string name="lang_toggle_to_ar">العربية</string>
+    <string name="lang_toggle_to_en">English</string>
+
+    <!-- Accessibility -->
+    <string name="cd_logo">S-Locator logo</string>
+    <string name="cd_checkbox_done">Mark as done</string>
+    <string name="cd_language">Change language</string>
+</resources>

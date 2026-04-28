@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Base Compose Material3 theme. We force dark for the premium look. -->
+    <style name="Theme.SLocatorFleetDriver" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/obsidian</item>
+        <item name="android:statusBarColor">@color/obsidian</item>
+        <item name="android:navigationBarColor">@color/obsidian</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+    </style>
+
+    <!-- Splash screen using AndroidX SplashScreen API surface (theme-based fallback) -->
+    <style name="Theme.SLocatorFleetDriver.Splash" parent="Theme.SLocatorFleetDriver">
+        <item name="android:windowSplashScreenBackground" tools:targetApi="s">@color/obsidian</item>
+        <item name="android:windowSplashScreenAnimatedIcon" tools:targetApi="s">@drawable/splash_logo</item>
+        <item name="android:windowSplashScreenIconBackgroundColor" tools:targetApi="s">@color/obsidian</item>
+        <item name="android:windowBackground">@color/obsidian</item>
+    </style>
+
+</resources>

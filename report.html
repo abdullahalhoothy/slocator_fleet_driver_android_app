@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Territory Optimization Report</title>
+<style>
+body { font-family: -apple-system, Segoe UI, Roboto, sans-serif;
+       max-width: 900px; margin: 32px auto; padding: 0 20px; color: #222; }
+h1 { font-size: 26px; margin-bottom: 4px; }
+h2 { font-size: 18px; margin-top: 28px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+h3 { font-size: 14px; margin-top: 18px; }
+.muted { color: #666; font-size: 13px; }
+table { border-collapse: collapse; width: 100%; margin-top: 10px; font-size: 13px; }
+th, td { padding: 6px 10px; border-bottom: 1px solid #eee; text-align: left; }
+th { background: #f5f7fa; font-weight: 600; }
+td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.kpi { display: flex; gap: 16px; margin: 14px 0; }
+.kpi .card { flex: 1; background: #f5f7fa; padding: 12px 14px; border-radius: 8px; }
+.kpi .card .v { font-size: 20px; font-weight: 700; color: #1a4e8a; }
+.kpi .card .l { font-size: 12px; color: #666; margin-top: 2px; }
+.note { font-size: 12px; color: #777; }
+.total-row { background: #fff5d6; font-weight: 700; }
+a.map { color: #1a4e8a; text-decoration: none; }
+a.map:hover { text-decoration: underline; }
+</style></head><body>
+
+<h1>Territory Optimization — Impact Report</h1>
+<div class="muted">Savings & benefits from the optimized routing plan.</div>
+
+<h2>1. Executive Summary</h2>
+<div class="kpi">
+  <div class="card"><div class="v">1,445.39 SAR</div><div class="l">per day</div></div>
+  <div class="card"><div class="v">17,344.70 SAR</div><div class="l">per 2 weeks</div></div>
+  <div class="card"><div class="v">34,689.39 SAR</div><div class="l">per month</div></div>
+</div>
+<p>
+  Across <b>3</b> drivers over a <b>12-workday</b> planning cycle,
+  the optimized plan covers <b>855</b> store visits.
+  Fleet drives <b>520 fewer km per day</b>
+  (600 → 80) and frees
+  <b>7.1 driver-hours per day</b>.
+</p>
+
+<h2>2. Savings & Benefits</h2>
+<table>
+  <thead><tr><th>Item</th><th>Per day</th><th>Per 2 weeks</th><th>Per month</th><th>Calculation</th></tr></thead>
+  <tbody>
+    <tr><td>Gas saving</td><td class="num">130.06 SAR</td><td class="num">1,560.70 SAR</td><td class="num">3,121.40 SAR</td><td class="note">520 km/day × 0.250 SAR/km</td></tr><tr><td>Driver time saving</td><td class="num">89.14 SAR</td><td class="num">1,069.71 SAR</td><td class="num">2,139.42 SAR</td><td class="note">7.1 h/day × 12.50 SAR/h</td></tr><tr><td>Planning time saving</td><td class="num">20.83 SAR</td><td class="num">250.00 SAR</td><td class="num">500.00 SAR</td><td class="note">1 h/day × 20.83 SAR/h</td></tr><tr><td>Vehicle maintenance savings</td><td class="num">0.00 SAR</td><td class="num">0.00 SAR</td><td class="num">0.00 SAR</td><td class="note">Listed qualitatively — not calculated (fewer km → less wear, deferred capex).</td></tr><tr><td>Extra revenue from more visits</td><td class="num">1,205.36 SAR</td><td class="num">14,464.29 SAR</td><td class="num">28,928.57 SAR</td><td class="note">+11.2 visits/day × 107.14 SAR/store/day</td></tr><tr><td>Consistency benefit</td><td class="num">0.00 SAR</td><td class="num">0.00 SAR</td><td class="num">0.00 SAR</td><td class="note">Listed qualitatively — stable routes build customer relationships.</td></tr><tr><td>Driver morale / ownership</td><td class="num">0.00 SAR</td><td class="num">0.00 SAR</td><td class="num">0.00 SAR</td><td class="note">Listed qualitatively — predictable routes reduce fatigue and turnover.</td></tr>
+    <tr class="total-row"><td>Total (calculated)</td>
+      <td class="num">1,445.39 SAR</td>
+      <td class="num">17,344.70 SAR</td>
+      <td class="num">34,689.39 SAR</td>
+      <td class="note">Qualitative items excluded.</td></tr>
+  </tbody>
+</table>
+
+<h3>Unit costs used</h3>
+<ul>
+  <li>Fuel: 0.250 SAR/km
+    (= 300 SAR/week ÷ 6 days ÷ 200 km)</li>
+  <li>Driver hourly: 12.50 SAR/h
+    (= 3000 SAR/mo ÷ 24 days ÷ 10 h)</li>
+  <li>Planner hourly: 20.83 SAR/h</li>
+</ul>
+
+<h2>3. Raw Data</h2>
+<p>All input shop locations plotted on a map → <a class="map" href="shops_map.html">shops_map.html</a></p>
+
+<h2>4. Clustering</h2>
+<p>Clusters (territories) with concave-hull boundaries → <a class="map" href="clusters_map.html">clusters_map.html</a></p>
+<table>
+  <thead><tr><th>Cluster</th><th>Routes (days)</th><th>Stops</th><th>Total distance</th></tr></thead>
+  <tbody><tr><td>Cluster 1</td><td class='num'>12</td><td class='num'>285</td><td class='num'>240.8 km</td></tr><tr><td>Cluster 2</td><td class='num'>12</td><td class='num'>285</td><td class='num'>242.0 km</td></tr><tr><td>Cluster 3</td><td class='num'>12</td><td class='num'>285</td><td class='num'>474.4 km</td></tr></tbody>
+</table>
+
+<h2>5. Routes</h2>
+<p>Per-driver per-day routes with OSRM road geometry → <a class="map" href="routes_map.html">routes_map.html</a></p>
+
+<h2>6. Driver Schedule (Excel)</h2>
+<p>One sheet per driver with Google Maps links per day → <code>routes.xlsx</code></p>
+
+</body></html>
