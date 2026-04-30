@@ -1,9 +1,10 @@
-package com.slocator.fleetdriver.ui.screens
+package com.slocator.fleetdriver.ui.screens.routesscreen.presentation
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -17,6 +18,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
+import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,43 +28,35 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slocator.fleetdriver.R
-import com.slocator.fleetdriver.data.RoutePart
 import com.slocator.fleetdriver.data.ScheduledDay
 import com.slocator.fleetdriver.ui.components.PartButton
+import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesUiState
 import com.slocator.fleetdriver.ui.theme.BrandEmerald
 import com.slocator.fleetdriver.ui.theme.BrandPurpleDim
 import com.slocator.fleetdriver.ui.theme.BrandPurpleLight
 import com.slocator.fleetdriver.ui.theme.ObsidianCard
 import com.slocator.fleetdriver.ui.theme.TextSecondary
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.LocalDate
 import java.util.Locale
 
-data class RoutesUiState(
-    val driverId: String,
-    val day: ScheduledDay?,
-    val parts: List<RoutePart>,
-    val isRefreshing: Boolean,
-    val errorBanner: String?,
-    val isPartDone: (RoutePart) -> Boolean,
-    val onTogglePart: (RoutePart, Boolean) -> Unit,
-    val onOpenRoute: (RoutePart) -> Unit,
-    val onRefresh: () -> Unit,
-    val onLogout: () -> Unit
-)
-
+@Preview
 @Composable
-fun RoutesScreen(state: RoutesUiState) {
-    val locale = androidx.compose.ui.platform.LocalConfiguration.current.locales[0]
+fun RoutesScreen(state: RoutesUiState= RoutesUiState()) {
+    val locale = LocalConfiguration.current.locales[0]
         ?: Locale.getDefault()
 
     Box(
@@ -75,10 +70,20 @@ fun RoutesScreen(state: RoutesUiState) {
                 driverId = state.driverId,
                 isRefreshing = state.isRefreshing,
                 onRefresh = state.onRefresh,
-                onLogout = state.onLogout
+                onLogout = state.onLogout,
+                onToggleLanguage = state.onToggleLanguage,
+                languageToggleLabel = state.languageToggleLabel
             )
 
-            DateHeadline(day = state.day, locale = locale)
+            DateHeadline(
+                day = state.day,
+                locale = locale,
+                hasPrevious = state.hasPreviousDay,
+                hasNext = state.hasNextDay,
+                onPrevious = state.onPreviousDay,
+                onNext = state.onNextDay,
+                currentIndex = state.currentDayIndex
+            )
 
             if (state.errorBanner != null) {
                 ErrorBanner(text = state.errorBanner)
@@ -97,11 +102,11 @@ fun RoutesScreen(state: RoutesUiState) {
                         .fillMaxSize()
                         .padding(horizontal = 20.dp),
                     verticalArrangement = Arrangement.spacedBy(14.dp),
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                    contentPadding = PaddingValues(
                         top = 8.dp, bottom = 32.dp
                     )
                 ) {
-                    items(state.parts, key = { it.partNumber }) { part ->
+                    items(state.parts, key = { "${state.day?.dayLabel}_${it.partNumber}" }) { part ->
                         PartButton(
                             partNumber = part.partNumber,
                             stopCount = part.stopCount,
@@ -121,7 +126,9 @@ private fun HeaderBar(
     driverId: String,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    onToggleLanguage: () -> Unit,
+    languageToggleLabel: String
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
@@ -157,6 +164,13 @@ private fun HeaderBar(
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
+        TextButton(onClick = onToggleLanguage) {
+            Text(
+                text = languageToggleLabel,
+                style = MaterialTheme.typography.labelLarge,
+                color = BrandEmerald
+            )
+        }
         IconButton(onClick = onRefresh, enabled = !isRefreshing) {
             if (isRefreshing) {
                 CircularProgressIndicator(
@@ -182,43 +196,93 @@ private fun HeaderBar(
 }
 
 @Composable
-private fun DateHeadline(day: ScheduledDay?, locale: Locale) {
+private fun DateHeadline(
+    day: ScheduledDay?,
+    locale: Locale,
+    hasPrevious: Boolean = false,
+    hasNext: Boolean = false,
+    onPrevious: () -> Unit = {},
+    onNext: () -> Unit = {},
+    currentIndex: Int = 0
+) {
     val date = day?.date
-    val (big, small) = when {
-        date != null -> {
-            // Big = "28 April"  /  Small = "Tuesday • 2026"
-            val dayMonthFmt = DateTimeFormatter.ofPattern("d MMMM", locale)
-            val dowYearFmt = DateTimeFormatter.ofPattern("EEEE • yyyy", locale)
-            date.format(dayMonthFmt) to date.format(dowYearFmt)
-        }
-        day != null -> day.dayLabel to ""
-        else -> stringResource(R.string.routes_today_label) to ""
+    // Format date text as DD/MM/YYYY
+    val dateText = if (date != null) {
+        val dd = date.dayOfMonth.toString().padStart(2, '0')
+        val mm = date.monthNumber.toString().padStart(2, '0')
+        "$dd/$mm/${date.year}"
+    } else {
+        day?.dayLabel ?: ""
     }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 24.dp, vertical = 8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = stringResource(R.string.routes_today_label),
             style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 3.sp),
             color = BrandEmerald
         )
-        Spacer(Modifier.size(2.dp))
-        Text(
-            text = big,
-            style = MaterialTheme.typography.displayLarge,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-        if (small.isNotBlank()) {
-            Spacer(Modifier.size(2.dp))
+        
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            IconButton(onClick = onPrevious, enabled = hasPrevious) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
+                    contentDescription = "Previous Day",
+                    tint = if (hasPrevious) MaterialTheme.colorScheme.onBackground else TextSecondary.copy(alpha = 0.3f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+            
             Text(
-                text = small,
-                style = MaterialTheme.typography.titleMedium,
-                color = TextSecondary
+                text = dateText,
+                style = MaterialTheme.typography.displayLarge.copy(fontSize = 28.sp),
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.padding(horizontal = 16.dp)
             )
+            
+            IconButton(onClick = onNext, enabled = hasNext) {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                    contentDescription = "Next Day",
+                    tint = if (hasNext) MaterialTheme.colorScheme.onBackground else TextSecondary.copy(alpha = 0.3f),
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
+}
+
+private fun formatLocalizedDate(date: LocalDate, locale: Locale): Pair<String, String> {
+    val isArabic = locale.language == "ar"
+    
+    val monthNames = if (isArabic) {
+        listOf("يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر")
+    } else {
+        listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+    }
+
+    val dayNames = if (isArabic) {
+        listOf("الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد")
+    } else {
+        listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+    }
+
+    val monthName = monthNames[date.month.ordinal]
+    val dayOfWeekIdx = date.dayOfWeek.ordinal // Monday is 0
+    val dayName = dayNames[dayOfWeekIdx]
+
+    val big = "${date.day} $monthName"
+    val small = "$dayName • ${date.year}"
+    
+    return Pair(big, small)
 }
 
 @Composable

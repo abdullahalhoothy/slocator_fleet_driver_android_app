@@ -1,7 +1,7 @@
 package com.slocator.fleetdriver.data
 
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.format.char
 import java.util.Locale
 
 /**
@@ -14,6 +14,7 @@ import java.util.Locale
  * The header format will harden to "Day N: D/month/YYYY" per the user's plan,
  * but we stay tolerant so an in-flight format change doesn't brick the app.
  */
+
 object DayResolver {
 
     private val MONTHS_EN = mapOf(
@@ -46,35 +47,73 @@ object DayResolver {
         "ديسمبر" to 12, "كانون الأول" to 12
     )
 
-    private val FORMATTERS = listOf(
-        DateTimeFormatter.ofPattern("d/M/yyyy", Locale.ENGLISH),
-        DateTimeFormatter.ofPattern("d-M-yyyy", Locale.ENGLISH),
-        DateTimeFormatter.ofPattern("yyyy-M-d", Locale.ENGLISH),
-        DateTimeFormatter.ofPattern("d.M.yyyy", Locale.ENGLISH)
+    private val FORMAT_DMY_SLASH = LocalDate.Format {
+        day()
+        char('/')
+        monthNumber()
+        char('/')
+        year()
+    }
+
+    private val FORMAT_DMY_DASH = LocalDate.Format {
+        day()
+        char('-')
+        monthNumber()
+        char('-')
+        year()
+    }
+
+    private val FORMAT_YMD_DASH = LocalDate.Format {
+        year()
+        char('-')
+        monthNumber()
+        char('-')
+        day()
+    }
+
+    private val FORMAT_DMY_DOT = LocalDate.Format {
+        day()
+        char('.')
+        monthNumber()
+        char('.')
+        year()
+    }
+
+    private val FORMATS = listOf(
+        FORMAT_DMY_SLASH,
+        FORMAT_DMY_DASH,
+        FORMAT_YMD_DASH,
+        FORMAT_DMY_DOT
     )
 
     fun parseHeaderDate(header: String?): LocalDate? {
         if (header.isNullOrBlank()) return null
         val text = header.trim()
 
-        // 1) Try exact numeric formats with the substring after a colon, em-dash, or dash.
-        val tail = text.substringAfter(':', missingDelimiterValue = text)
-            .substringAfter('—', missingDelimiterValue = text)
-            .trim()
-
-        for (fmt in FORMATTERS) {
-            try { return LocalDate.parse(tail.replace(" ", ""), fmt) } catch (_: Exception) {}
+        // Try to find regex dd/mm/yyyy or dd-mm-yyyy or dd.mm.yyyy with alphabetic months
+        // Support \p{L} for letters (Arabic, English, etc)
+        val regex = Regex("""(\d{1,2})[/.\-](\p{L}+|\d{1,2})[/.\-](\d{4})""")
+        val match = regex.find(text)
+        if (match != null) {
+            val (dayStr, monthStr, yearStr) = match.destructured
+            val dayVal = dayStr.toIntOrNull()
+            val yearVal = yearStr.toIntOrNull()
+            val monthVal = monthStr.toIntOrNull() ?: MONTHS_EN[monthStr.lowercase()] ?: MONTHS_AR[monthStr]
+            if (dayVal != null && monthVal != null && yearVal != null) {
+                return try { LocalDate(yearVal, monthVal, dayVal) } catch (_: Exception) { null }
+            }
         }
 
-        // 2) Try "D/monthName/YYYY" with English month names.
-        val partsByDelim = tail.split('/', '-', ' ').filter { it.isNotBlank() }
-        if (partsByDelim.size >= 3) {
-            val day = partsByDelim[0].filter { it.isDigit() }.toIntOrNull()
-            val monthName = partsByDelim[1].lowercase(Locale.ROOT)
-            val year = partsByDelim[2].filter { it.isDigit() }.toIntOrNull()
-            val month = MONTHS_EN[monthName] ?: MONTHS_AR[partsByDelim[1]]
-            if (day != null && month != null && year != null) {
-                return try { LocalDate.of(year, month, day) } catch (_: Exception) { null }
+        // Try YYYY-MM-DD
+        val regexYMD = Regex("""(\d{4})[/.\-](\d{1,2})[/.\-](\d{1,2})""")
+        val matchYMD = regexYMD.find(text)
+        if (matchYMD != null) {
+            val (yearStr, monthStr, dayStr) = matchYMD.destructured
+            val dayVal = dayStr.toIntOrNull()
+            val yearVal = yearStr.toIntOrNull()
+            val monthVal = monthStr.toIntOrNull()
+            if (dayVal != null && monthVal != null && yearVal != null) {
+                return try { LocalDate(yearVal, monthVal, dayVal) } catch (_: Exception) { null }
             }
         }
 
@@ -87,14 +126,20 @@ object DayResolver {
      */
     fun pickDay(days: List<ScheduledDay>, today: LocalDate): ScheduledDay? {
         if (days.isEmpty()) return null
+        
         // 1) Exact-date match.
         days.firstOrNull { it.date == today }?.let { return it }
+        
         // 2) Earliest day on/after today.
-        val nextUp = days.filter { it.date != null && !it.date.isBefore(today) }
-            .minByOrNull { it.date!!.toEpochDay() }
+        val nextUp = days.filter { it.date != null && it.date!! >= today }
+            .minByOrNull { it.date!!.toEpochDays() }
         if (nextUp != null) return nextUp
+        
         // 3) If all dates are before today, grab the latest.
-        val latest = days.filter { it.date != null }.maxByOrNull { it.date!!.toEpochDay() }
-        return latest
+        val latest = days.filter { it.date != null }.maxByOrNull { it.date!!.toEpochDays() }
+        if (latest != null) return latest
+
+        // 4) Absolute fallback: just show the first available day if date parsing failed for everything.
+        return days.firstOrNull()
     }
 }

@@ -3,139 +3,124 @@ package com.slocator.fleetdriver.data
 import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.io.File
+import org.json.JSONObject
+import java.io.BufferedReader
+import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
-import java.util.concurrent.TimeUnit
 
-/**
- * Owns fetching, caching, and parsing the routes XLSX.
- *
- * Cache strategy:
- *  - Write the downloaded bytes to filesDir/routes_cache.xlsx atomically (.tmp -> rename).
- *  - On startup we always *try* the network first with a short timeout, then fall back to cache.
- *  - This satisfies the "must work offline" App Store requirement without complicated sync logic.
- */
 class RoutesRepository(private val context: Context) {
 
-    private val cacheFile: File by lazy { File(context.filesDir, "routes_cache.xlsx") }
-
-    suspend fun loadAndParse(forceRefresh: Boolean = false): Result<XlsxParser.Workbook> =
+    suspend fun fetchSchedule(driverPhone: String, managerPhone: String): Result<DriverSchedule> =
         withContext(Dispatchers.IO) {
-            val networkResult = if (forceRefresh || !cacheFile.exists()) {
-                downloadToCache()
-            } else {
-                // best-effort refresh, but we tolerate a network failure if cache is fresh
-                downloadToCache().recover { Unit }
-            }
-
-            // Fall through to whatever bytes we have on disk.
-            if (!cacheFile.exists()) {
-                return@withContext Result.failure(
-                    networkResult.exceptionOrNull() ?: IllegalStateException("No cached routes available")
-                )
-            }
-
             try {
-                val wb = cacheFile.inputStream().use { XlsxParser.parse(it) }
-                Result.success(wb)
+                val url = URL("http://37.27.195.216:7080/driver_links")
+                val conn = url.openConnection() as HttpURLConnection
+                conn.requestMethod = "POST"
+                conn.setRequestProperty("Content-Type", "application/json")
+                conn.setRequestProperty("Accept", "application/json")
+                conn.doOutput = true
+
+                val payload = JSONObject().apply {
+                    put("driver_phone", driverPhone)
+                    put("manager_phone", managerPhone)
+                }
+
+                conn.outputStream.use { os ->
+                    val input = payload.toString().toByteArray(Charsets.UTF_8)
+                    os.write(input, 0, input.size)
+                }
+
+                val responseCode = conn.responseCode
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    val reader = BufferedReader(InputStreamReader(conn.inputStream))
+                    val responseStr = reader.readText()
+                    reader.close()
+
+                    val jsonResponse = JSONObject(responseStr)
+                    val routesArray = jsonResponse.optJSONArray("routes")
+                    
+                    if (routesArray == null || routesArray.length() == 0) {
+                        return@withContext Result.failure(Exception("No routes found"))
+                    }
+
+                    val daysList = mutableListOf<ScheduledDay>()
+                    for (i in 0 until routesArray.length()) {
+                        val routeObj = routesArray.getJSONObject(i)
+                        val dayInt = routeObj.optInt("day", i + 1)
+                        val dateStr = routeObj.optString("date", "")
+                        val linksArray = routeObj.optJSONArray("links")
+                        
+                        val parsedDate = DayResolver.parseHeaderDate(dateStr)
+
+                        val parts = mutableListOf<RoutePart>()
+                        if (linksArray != null) {
+                            for (j in 0 until linksArray.length()) {
+                                val linkUrl = linksArray.getString(j)
+                                parts.add(
+                                    RoutePart(
+                                        partNumber = j + 1,
+                                        mapsUrl = linkUrl,
+                                        stopCount = countStops(linkUrl)
+                                    )
+                                )
+                            }
+                        }
+                        
+                        if (parts.isNotEmpty()) {
+                            daysList.add(
+                                ScheduledDay(
+                                    dayLabel = "Day $dayInt",
+                                    date = parsedDate,
+                                    parts = parts
+                                )
+                            )
+                        }
+                    }
+                    
+                    if (daysList.isEmpty()) {
+                        Result.failure(Exception("No valid routes in payload"))
+                    } else {
+                        Result.success(DriverSchedule(driverId = driverPhone, days = daysList))
+                    }
+                } else {
+                    Result.failure(Exception("HTTP Error: $responseCode"))
+                }
             } catch (t: Throwable) {
                 Result.failure(t)
             }
         }
 
-    fun lastSyncedAt(): Long? =
-        if (cacheFile.exists()) cacheFile.lastModified() else null
-
-    /** Find a single driver's schedule. Sheet names are the driver IDs. */
-    fun extractSchedule(workbook: XlsxParser.Workbook, driverId: String): DriverSchedule? {
-        val target = driverId.trim()
-        val sheet = workbook.sheets.firstOrNull { it.name.equals(target, ignoreCase = true) }
-            ?: workbook.sheets.firstOrNull { normalize(it.name) == normalize(target) }
-            ?: return null
-
-        // Row 0 is the header (day labels). Subsequent rows are part 1, part 2, ...
-        val rows = sheet.rows
-        if (rows.isEmpty()) return DriverSchedule(sheet.name, emptyList())
-
-        val headers = rows[0]
-        val partRows = rows.drop(1)
-
-        val days = headers.mapIndexedNotNull { col, label ->
-            if (label.isBlank()) return@mapIndexedNotNull null
-            val parts = partRows.mapIndexed { idx, row ->
-                val cell = row.getOrNull(col).orEmpty().trim()
-                if (cell.isBlank()) null
-                else RoutePart(
-                    partNumber = idx + 1,
-                    mapsUrl = cell,
-                    stopCount = countStops(cell)
-                )
-            }.filterNotNull()
-            ScheduledDay(
-                dayLabel = label,
-                date = DayResolver.parseHeaderDate(label),
-                parts = parts
-            )
-        }
-        return DriverSchedule(driverId = sheet.name, days = days)
-    }
-
-    private fun normalize(s: String): String =
-        s.trim().replace(Regex("[\\s\\-_+()]+"), "").lowercase()
+    fun lastSyncedAt(): Long? = System.currentTimeMillis()
 
     /**
-     * Cheap stop-count: number of "/" segments in the maps URL after the host path.
-     * E.g. "https://www.google.com/maps/dir/A/B/C/D/" -> 4 segments. We subtract the
-     * origin (1) to report waypoint count, then add 1 for the destination.
-     * The header label ("23 stops") is also a fine source if present, but we don't
-     * always have it post-format-change.
+     * Cheap stop-count: Parses the 'api=1' format and counts waypoints + destination.
      */
     private fun countStops(url: String): Int {
-        val marker = "/maps/dir/"
-        val idx = url.indexOf(marker)
-        if (idx < 0) return 0
-        val after = url.substring(idx + marker.length)
-            .trim('/').trim()
-        if (after.isEmpty()) return 0
-        // Each "lat,lng" segment between slashes is one stop.
-        return after.split('/').count { seg ->
-            seg.contains(',') && seg.split(',').all { it.toDoubleOrNull() != null }
-        }
-    }
-
-    private fun downloadToCache(): Result<Unit> = try {
-        val url = URL(ROUTES_URL)
-        val conn = (url.openConnection() as HttpURLConnection).apply {
-            connectTimeout = TimeUnit.SECONDS.toMillis(8).toInt()
-            readTimeout = TimeUnit.SECONDS.toMillis(15).toInt()
-            requestMethod = "GET"
-            setRequestProperty("Accept", "*/*")
-            setRequestProperty("User-Agent", "S-LocatorFleetDriver/1.0 (Android)")
-        }
-        try {
-            val code = conn.responseCode
-            if (code !in 200..299) {
-                return Result.failure(IllegalStateException("HTTP $code"))
+        if (!url.contains("api=1")) return 0
+        
+        var stops = 0
+        
+        // Check for origin
+        if (url.contains("origin=")) stops++
+        
+        // Check for destination
+        if (url.contains("destination=")) stops++
+        
+        // Count waypoints
+        val waypointsIndex = url.indexOf("waypoints=")
+        if (waypointsIndex >= 0) {
+            val waypointsStr = url.substring(waypointsIndex + "waypoints=".length).substringBefore("&")
+            if (waypointsStr.isNotEmpty()) {
+                stops += waypointsStr.split("%7C", "|").size
             }
-            val tmp = File(context.filesDir, "routes_cache.xlsx.tmp")
-            conn.inputStream.use { input ->
-                tmp.outputStream().use { output -> input.copyTo(output) }
-            }
-            // atomic-ish rename
-            if (cacheFile.exists()) cacheFile.delete()
-            tmp.renameTo(cacheFile)
-            Result.success(Unit)
-        } finally {
-            conn.disconnect()
         }
-    } catch (t: Throwable) {
-        Result.failure(t)
-    }
-
-    companion object {
-        // The user-supplied source of truth. If this URL changes, edit here.
-        const val ROUTES_URL =
-            "http://37.27.195.216:7080/static/reports/SDLacH0vD1drZleCF2zxTigs3043_territory_20260424193332_routes.xlsx"
+        
+        // Usually stop count = origin + destination + waypoints.
+        // We typically report the number of *destinations* (waypoints + final dest), 
+        // so we subtract 1 if origin exists so it represents "stops from here".
+        // If the user wants the absolute total, we can return `stops`.
+        // Let's return total stops.
+        return if (stops > 0) stops else 0
     }
 }

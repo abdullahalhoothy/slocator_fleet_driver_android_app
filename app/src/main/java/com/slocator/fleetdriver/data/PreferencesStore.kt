@@ -13,6 +13,10 @@ class PreferencesStore(context: Context) {
         get() = prefs.getString("last_driver_id", null)
         set(value) = prefs.edit().putString("last_driver_id", value).apply()
 
+    var lastManagerPhone: String?
+        get() = prefs.getString("last_manager_phone", null)
+        set(value) = prefs.edit().putString("last_manager_phone", value).apply()
+
     var languageOverride: String?
         get() = prefs.getString("language_override", null)
         set(value) = prefs.edit().putString("language_override", value).apply()
