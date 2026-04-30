@@ -4,7 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * Per-driver-per-day part completion state.

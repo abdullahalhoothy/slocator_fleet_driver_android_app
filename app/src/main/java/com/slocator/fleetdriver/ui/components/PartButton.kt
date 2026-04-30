@@ -33,6 +33,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slocator.fleetdriver.R
@@ -54,14 +55,17 @@ import com.slocator.fleetdriver.ui.theme.ObsidianOutline
  *  - default: gradient purple, big shadow, large tap target
  *  - done:    flattened to a quiet emerald-tinted card, button is non-clickable
  */
+@Preview
 @Composable
 fun PartButton(
-    partNumber: Int,
-    stopCount: Int,
-    isDone: Boolean,
-    onCheckedChange: (Boolean) -> Unit,
-    onOpenRoute: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    partNumber: Int = 1 ,
+    stopCount: Int = 2 ,
+    isDone: Boolean = false ,
+    onCheckedChange: (Boolean) -> Unit = {},
+    onOpenRoute: () -> Unit= {},
+
+
 ) {
     val targetAlpha by animateFloatAsState(if (isDone) 0.55f else 1f, label = "alpha")
     val targetBg by animateColorAsState(

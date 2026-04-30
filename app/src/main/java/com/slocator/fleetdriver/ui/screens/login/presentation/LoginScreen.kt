@@ -1,11 +1,10 @@
-package com.slocator.fleetdriver.ui.screens
+package com.slocator.fleetdriver.ui.screens.login.presentation
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -55,14 +54,16 @@ import com.slocator.fleetdriver.ui.theme.TextSecondary
 @Composable
 fun LoginScreen(
     initialPhone: String = "",
+    initialManagerPhone: String = "",
     isLoading: Boolean = false,
     errorText: String? = null,
-    onSubmit: (String) -> Unit,
+    onSubmit: (String, String) -> Unit,
     onToggleLanguage: () -> Unit,
     languageToggleLabel: String
 ) {
     val focus = LocalFocusManager.current
     var phone by remember { mutableStateOf(initialPhone) }
+    var managerPhone by remember { mutableStateOf(initialManagerPhone) }
     val emptyError = stringResource(R.string.login_error_empty)
     var localErr by remember { mutableStateOf<String?>(null) }
     val visibleError = errorText ?: localErr
@@ -134,6 +135,40 @@ fun LoginScreen(
                 ),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Phone,
+                    imeAction = ImeAction.Next
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 64.dp)
+                    .clip(RoundedCornerShape(16.dp)),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedContainerColor = ObsidianCard,
+                    unfocusedContainerColor = ObsidianCard,
+                    focusedBorderColor = BrandPurpleLight,
+                    unfocusedBorderColor = ObsidianOutline,
+                    cursorColor = BrandEmerald,
+                    focusedLabelColor = BrandPurpleLight,
+                    unfocusedLabelColor = TextSecondary
+                )
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = managerPhone,
+                onValueChange = {
+                    managerPhone = it
+                    if (localErr != null) localErr = null
+                },
+                singleLine = true,
+                label = { Text("Manager Phone") },
+                placeholder = { Text("Enter manager's phone") },
+                textStyle = TextStyle(
+                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    fontWeight = FontWeight.SemiBold
+                ),
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone,
                     imeAction = ImeAction.Go
                 ),
                 modifier = Modifier
@@ -166,9 +201,10 @@ fun LoginScreen(
 
             Button(
                 onClick = {
-                    val v = phone.trim()
-                    if (v.isEmpty()) localErr = emptyError
-                    else { focus.clearFocus(); onSubmit(v) }
+                    val p = phone.trim()
+                    val mp = managerPhone.trim()
+                    if (p.isEmpty() || mp.isEmpty()) localErr = emptyError
+                    else { focus.clearFocus(); onSubmit(p, mp) }
                 },
                 enabled = !isLoading,
                 modifier = Modifier

@@ -1,6 +1,6 @@
 package com.slocator.fleetdriver.data
 
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /**
  * One driver's complete schedule, as decoded from one sheet of the workbook.
