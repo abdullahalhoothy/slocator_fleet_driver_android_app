@@ -1,8 +1,6 @@
 package com.slocator.fleetdriver.data
 
 import kotlinx.datetime.LocalDate
-import kotlinx.datetime.format.char
-import java.util.Locale
 
 /**
  * Parses dates out of column-header strings like:
@@ -47,44 +45,44 @@ object DayResolver {
         "ديسمبر" to 12, "كانون الأول" to 12
     )
 
-    private val FORMAT_DMY_SLASH = LocalDate.Format {
-        day()
-        char('/')
-        monthNumber()
-        char('/')
-        year()
-    }
-
-    private val FORMAT_DMY_DASH = LocalDate.Format {
-        day()
-        char('-')
-        monthNumber()
-        char('-')
-        year()
-    }
-
-    private val FORMAT_YMD_DASH = LocalDate.Format {
-        year()
-        char('-')
-        monthNumber()
-        char('-')
-        day()
-    }
-
-    private val FORMAT_DMY_DOT = LocalDate.Format {
-        day()
-        char('.')
-        monthNumber()
-        char('.')
-        year()
-    }
-
-    private val FORMATS = listOf(
-        FORMAT_DMY_SLASH,
-        FORMAT_DMY_DASH,
-        FORMAT_YMD_DASH,
-        FORMAT_DMY_DOT
-    )
+//    private val FORMAT_DMY_SLASH = LocalDate.Format {
+//        day()
+//        char('/')
+//        monthNumber()
+//        char('/')
+//        year()
+//    }
+//
+//    private val FORMAT_DMY_DASH = LocalDate.Format {
+//        day()
+//        char('-')
+//        monthNumber()
+//        char('-')
+//        year()
+//    }
+//
+//    private val FORMAT_YMD_DASH = LocalDate.Format {
+//        year()
+//        char('-')
+//        monthNumber()
+//        char('-')
+//        day()
+//    }
+//
+//    private val FORMAT_DMY_DOT = LocalDate.Format {
+//        day()
+//        char('.')
+//        monthNumber()
+//        char('.')
+//        year()
+//    }
+//
+//    private val FORMATS = listOf(
+//        FORMAT_DMY_SLASH,
+//        FORMAT_DMY_DASH,
+//        FORMAT_YMD_DASH,
+//        FORMAT_DMY_DOT
+//    )
 
     fun parseHeaderDate(header: String?): LocalDate? {
         if (header.isNullOrBlank()) return null
@@ -122,24 +120,12 @@ object DayResolver {
 
     /**
      * Pick the schedule day matching the device's current local date.
-     * Falls back to: same-or-after today's index if nothing matches exactly.
+     * Returns null if no exact date match is found.
      */
     fun pickDay(days: List<ScheduledDay>, today: LocalDate): ScheduledDay? {
         if (days.isEmpty()) return null
         
-        // 1) Exact-date match.
-        days.firstOrNull { it.date == today }?.let { return it }
-        
-        // 2) Earliest day on/after today.
-        val nextUp = days.filter { it.date != null && it.date!! >= today }
-            .minByOrNull { it.date!!.toEpochDays() }
-        if (nextUp != null) return nextUp
-        
-        // 3) If all dates are before today, grab the latest.
-        val latest = days.filter { it.date != null }.maxByOrNull { it.date!!.toEpochDays() }
-        if (latest != null) return latest
-
-        // 4) Absolute fallback: just show the first available day if date parsing failed for everything.
-        return days.firstOrNull()
+        // Exact-date match only.
+        return days.firstOrNull { it.date == today }
     }
 }

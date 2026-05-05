@@ -50,6 +50,7 @@ class LoginViewModel(
     }
 
     private fun submit(phone: String, managerPhone: String, notFound: String, network: String) {
+        if (_uiState.value.isLoading) return
         _uiState.update { it.copy(isLoading = true, errorText = null) }
         viewModelScope.launch {
             val res = repo.fetchSchedule(phone, managerPhone)

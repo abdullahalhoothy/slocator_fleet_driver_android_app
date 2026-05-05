@@ -15,18 +15,16 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slocator.fleetdriver.R
 import com.slocator.fleetdriver.ui.theme.BrandEmerald
 import com.slocator.fleetdriver.ui.theme.BrandPurpleLight
 
-/**
- * Vector logomark — gradient pin with hollow inner ring.
- * Drawn directly in Compose so we don't pay for a separate vector asset.
- */
+
 @Composable
-fun BrandLogo(modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 64.dp) {
+fun BrandLogo(modifier: Modifier = Modifier, size: Dp = 64.dp) {
     Canvas(modifier = modifier.size(size)) {
         val w = this.size.width
         val h = this.size.height

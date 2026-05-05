@@ -33,31 +33,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slocator.fleetdriver.R
 import com.slocator.fleetdriver.data.ScheduledDay
+import com.slocator.fleetdriver.ui.components.BrandLockup
 import com.slocator.fleetdriver.ui.components.PartButton
 import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesUiState
 import com.slocator.fleetdriver.ui.theme.BrandEmerald
 import com.slocator.fleetdriver.ui.theme.BrandPurpleDim
-import com.slocator.fleetdriver.ui.theme.BrandPurpleLight
 import com.slocator.fleetdriver.ui.theme.ObsidianCard
 import com.slocator.fleetdriver.ui.theme.TextSecondary
-import kotlinx.datetime.LocalDate
-import java.util.Locale
+import kotlinx.datetime.number
 
 @Preview
 @Composable
 fun RoutesScreen(state: RoutesUiState= RoutesUiState()) {
-    val locale = LocalConfiguration.current.locales[0]
-        ?: Locale.getDefault()
 
     Box(
         modifier = Modifier
@@ -77,12 +72,12 @@ fun RoutesScreen(state: RoutesUiState= RoutesUiState()) {
 
             DateHeadline(
                 day = state.day,
-                locale = locale,
+
                 hasPrevious = state.hasPreviousDay,
                 hasNext = state.hasNextDay,
                 onPrevious = state.onPreviousDay,
                 onNext = state.onNextDay,
-                currentIndex = state.currentDayIndex
+
             )
 
             if (state.errorBanner != null) {
@@ -136,21 +131,20 @@ private fun HeaderBar(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(
-                    Brush.linearGradient(listOf(BrandPurpleLight, BrandEmerald))
-                ),
-            contentAlignment = Alignment.Center
-        ) {
-            Text(
-                text = driverId.firstOrNull()?.uppercase() ?: "•",
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Black),
-                color = MaterialTheme.colorScheme.onBackground
+//        Box(
+//            modifier = Modifier
+//                .size(44.dp)
+//                .clip(CircleShape)
+//                .background(
+//                    Brush.linearGradient(listOf(BrandPurpleLight, BrandEmerald))
+//                ),
+//            contentAlignment = Alignment.Center
+//        ) {
+            BrandLockup(
+                modifier = Modifier
+                    .size(44.dp)
             )
-        }
+//        }
         Spacer(Modifier.size(12.dp))
         Column(modifier = Modifier.weight(1f)) {
             Text(
@@ -198,18 +192,17 @@ private fun HeaderBar(
 @Composable
 private fun DateHeadline(
     day: ScheduledDay?,
-    locale: Locale,
     hasPrevious: Boolean = false,
     hasNext: Boolean = false,
     onPrevious: () -> Unit = {},
     onNext: () -> Unit = {},
-    currentIndex: Int = 0
+
 ) {
     val date = day?.date
     // Format date text as DD/MM/YYYY
     val dateText = if (date != null) {
-        val dd = date.dayOfMonth.toString().padStart(2, '0')
-        val mm = date.monthNumber.toString().padStart(2, '0')
+        val dd = date.day.toString().padStart(2, '0')
+        val mm = date.month.number.toString().padStart(2, '0')
         "$dd/$mm/${date.year}"
     } else {
         day?.dayLabel ?: ""
@@ -237,7 +230,7 @@ private fun DateHeadline(
                     imageVector = Icons.AutoMirrored.Filled.ArrowBackIos,
                     contentDescription = "Previous Day",
                     tint = if (hasPrevious) MaterialTheme.colorScheme.onBackground else TextSecondary.copy(alpha = 0.3f),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
             
@@ -245,7 +238,8 @@ private fun DateHeadline(
                 text = dateText,
                 style = MaterialTheme.typography.displayLarge.copy(fontSize = 28.sp),
                 color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.padding(horizontal = 16.dp)
+                 textAlign = TextAlign.Center,
+                modifier = Modifier.padding(horizontal = 16.dp).weight(1f)
             )
             
             IconButton(onClick = onNext, enabled = hasNext) {
@@ -253,37 +247,37 @@ private fun DateHeadline(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
                     contentDescription = "Next Day",
                     tint = if (hasNext) MaterialTheme.colorScheme.onBackground else TextSecondary.copy(alpha = 0.3f),
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(24.dp)
                 )
             }
         }
     }
 }
 
-private fun formatLocalizedDate(date: LocalDate, locale: Locale): Pair<String, String> {
-    val isArabic = locale.language == "ar"
-    
-    val monthNames = if (isArabic) {
-        listOf("يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر")
-    } else {
-        listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
-    }
-
-    val dayNames = if (isArabic) {
-        listOf("الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد")
-    } else {
-        listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
-    }
-
-    val monthName = monthNames[date.month.ordinal]
-    val dayOfWeekIdx = date.dayOfWeek.ordinal // Monday is 0
-    val dayName = dayNames[dayOfWeekIdx]
-
-    val big = "${date.day} $monthName"
-    val small = "$dayName • ${date.year}"
-    
-    return Pair(big, small)
-}
+//private fun formatLocalizedDate(date: LocalDate, locale: Locale): Pair<String, String> {
+//    val isArabic = locale.language == "ar"
+//
+//    val monthNames = if (isArabic) {
+//        listOf("يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر")
+//    } else {
+//        listOf("January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December")
+//    }
+//
+//    val dayNames = if (isArabic) {
+//        listOf("الاثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت", "الأحد")
+//    } else {
+//        listOf("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+//    }
+//
+//    val monthName = monthNames[date.month.ordinal]
+//    val dayOfWeekIdx = date.dayOfWeek.ordinal // Monday is 0
+//    val dayName = dayNames[dayOfWeekIdx]
+//
+//    val big = "${date.day} $monthName"
+//    val small = "$dayName • ${date.year}"
+//
+//    return Pair(big, small)
+//}
 
 @Composable
 private fun ProgressStrip(done: Int, total: Int) {

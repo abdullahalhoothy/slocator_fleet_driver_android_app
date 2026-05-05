@@ -2,12 +2,16 @@ package com.slocator.fleetdriver
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.os.LocaleListCompat
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -17,44 +21,97 @@ import androidx.navigation.compose.rememberNavController
 import com.slocator.fleetdriver.ui.screens.login.presentation.LoginRoute
 import com.slocator.fleetdriver.ui.screens.routesscreen.presentation.RoutesRoute
 import com.slocator.fleetdriver.ui.theme.SLocatorTheme
+import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
+
+    override fun attachBaseContext(newBase: android.content.Context) {
+        val prefs = newBase.getSharedPreferences("slocator_app", android.content.Context.MODE_PRIVATE)
+        val targetTag = prefs.getString("language_override", "ar") ?: "ar"
+        
+        val locale = Locale.Builder().setLanguage(targetTag).build()
+        Locale.setDefault(locale)
+        
+        val config = android.content.res.Configuration(newBase.resources.configuration)
+        config.setLocale(locale)
+        config.setLayoutDirection(locale)
+        
+        val context = newBase.createConfigurationContext(config)
+        super.attachBaseContext(context)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val app = application as SLocatorApp
         
-        // Ensure the locale is applied as early as possible.
-        val targetTag = app.prefs.languageOverride ?: "ar"
-        val current = AppCompatDelegate.getApplicationLocales()
-        if (current.isEmpty || current.get(0)?.language != targetTag) {
-            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(targetTag))
-        }
 
-        // Splash screen MUST be installed before super.onCreate.
         installSplashScreen()
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
         setContent {
-            SLocatorTheme {
-                AppRoot(
-                    app = app,
-                    onOpenMaps = { url -> openInMaps(url) }
-                )
+            val targetTag = app.prefs.languageOverride ?: "ar"
+            val layoutDirection = if (targetTag == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
+            
+            CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
+                SLocatorTheme {
+                    AppRoot(
+                        app = app,
+                        onOpenMaps = { url -> openInMaps(url) }
+                    )
+                }
             }
         }
     }
 
+    private fun convertApiUrlToWebUrl(apiUrl: String): String {
+        try {
+            val uri = android.net.Uri.parse(apiUrl)
+            if (uri.getQueryParameter("api") == "1") {
+                val origin = uri.getQueryParameter("origin") ?: ""
+                val dest = uri.getQueryParameter("destination") ?: ""
+                val wpsStr = uri.getQueryParameter("waypoints") ?: ""
+
+                val wps = wpsStr.split("|").filter { it.isNotBlank() }
+
+                val builder = StringBuilder("https://www.google.com/maps/dir/")
+                
+
+                builder.append("/")
+
+
+                if (origin.isNotBlank()) {
+                    builder.append(origin).append("/")
+                }
+
+                for (wp in wps) {
+                    builder.append(wp).append("/")
+                }
+
+                if (dest.isNotBlank()) {
+                    builder.append(dest).append("/")
+                }
+
+                return builder.toString()
+            }
+        } catch (e: Exception) {
+            Log.e("URL_CONVERT", "Failed to convert URL: ${e.message}")
+        }
+        return apiUrl
+    }
+
     private fun openInMaps(url: String) {
-        val intent = Intent(Intent.ACTION_VIEW, url.toUri()).apply {
+        val webUrl = convertApiUrlToWebUrl(url)
+
+        val intent = Intent(Intent.ACTION_VIEW, webUrl.toUri()).apply {
             // Prefer the Google Maps app, but fall back gracefully if it isn't installed.
             setPackage("com.google.android.apps.maps")
         }
+        Log.d("urlO", url)
+        Log.d("url", webUrl)
         if (intent.resolveActivity(packageManager) != null) {
             startActivity(intent)
-        } else {
-            // Fallback: any browser/maps app that can handle the URL.
-            val fallback = Intent(Intent.ACTION_VIEW, url.toUri())
+        } else { // Fallback: any browser/maps app that can handle the URL.
+            val fallback = Intent(Intent.ACTION_VIEW, webUrl.toUri())
             if (fallback.resolveActivity(packageManager) != null) {
                 startActivity(fallback)
             } else {
@@ -78,7 +135,9 @@ private fun AppRoot(
         composable("login") {
             LoginRoute(
                 onLoginSuccess = {
-                    nav.navigate("routes") { popUpTo("login") { inclusive = true } }
+                    nav.navigate("routes") {
+                        popUpTo("login") { inclusive = true }
+                    }
                 },
                 onToggleLanguage = { app.toggleLanguage() }
             )
@@ -88,7 +147,9 @@ private fun AppRoot(
             RoutesRoute(
                 onOpenMaps = onOpenMaps,
                 onLogout = {
-                    nav.navigate("login") { popUpTo("routes") { inclusive = true } }
+                    nav.navigate("login") {
+                        popUpTo("routes") { inclusive = true }
+                    }
                 },
                 onToggleLanguage = { app.toggleLanguage() }
             )

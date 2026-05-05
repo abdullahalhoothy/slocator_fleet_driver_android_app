@@ -12,7 +12,7 @@ import org.koin.dsl.module
 
 val appModule = module {
     single { PreferencesStore(androidContext()) }
-    single { RoutesRepository(androidContext()) }
+    single { RoutesRepository() }
     single { CompletionStore(androidContext()) }
 
     viewModel { (onToggleLanguage: () -> Unit) ->
