@@ -7,12 +7,10 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
-import androidx.core.os.LocaleListCompat
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.NavHost
@@ -26,7 +24,7 @@ import java.util.Locale
 class MainActivity : AppCompatActivity() {
 
     override fun attachBaseContext(newBase: android.content.Context) {
-        val prefs = newBase.getSharedPreferences("slocator_app", android.content.Context.MODE_PRIVATE)
+        val prefs = newBase.getSharedPreferences("slocator_app", MODE_PRIVATE)
         val targetTag = prefs.getString("language_override", "ar") ?: "ar"
         
         val locale = Locale.Builder().setLanguage(targetTag).build()
@@ -65,7 +63,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun convertApiUrlToWebUrl(apiUrl: String): String {
         try {
-            val uri = android.net.Uri.parse(apiUrl)
+            val uri = apiUrl.toUri()
             if (uri.getQueryParameter("api") == "1") {
                 val origin = uri.getQueryParameter("origin") ?: ""
                 val dest = uri.getQueryParameter("destination") ?: ""
