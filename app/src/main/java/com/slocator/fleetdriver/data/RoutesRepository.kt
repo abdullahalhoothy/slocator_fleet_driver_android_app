@@ -1,6 +1,5 @@
 package com.slocator.fleetdriver.data
 
-import android.content.Context
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -9,7 +8,7 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 
-class RoutesRepository(private val context: Context) {
+class RoutesRepository {
 
     suspend fun fetchSchedule(driverPhone: String, managerPhone: String): Result<DriverSchedule> =
         withContext(Dispatchers.IO) {
@@ -91,7 +90,7 @@ class RoutesRepository(private val context: Context) {
             }
         }
 
-    fun lastSyncedAt(): Long? = System.currentTimeMillis()
+   // fun lastSyncedAt(): Long? = System.currentTimeMillis()
 
     /**
      * Cheap stop-count: Parses the 'api=1' format and counts waypoints + destination.

@@ -44,7 +44,11 @@ fun RoutesRoute(
                     )
                 )
             },
-            onOpenRoute = { part -> onOpenMaps(part.mapsUrl) },
+            onOpenRoute = { part -> 
+                // Mark the part as done when the user opens the map
+                viewModel.handleAction(RoutesAction.TogglePart(part, true))
+                onOpenMaps(part.mapsUrl) 
+            },
             onRefresh = { viewModel.handleAction(RoutesAction.Refresh) },
             onLogout = {
                 viewModel.handleAction(RoutesAction.Logout)

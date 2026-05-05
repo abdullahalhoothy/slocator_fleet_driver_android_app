@@ -63,7 +63,7 @@ class RoutesViewModel(
         }
     }
 
-    private fun loadData(forceRefresh: Boolean = false) {
+    private fun loadData() {
         val driverId = prefs.lastDriverId ?: return
         val managerPhone = prefs.lastManagerPhone ?: return
 
@@ -72,7 +72,7 @@ class RoutesViewModel(
             val res = repo.fetchSchedule(driverId, managerPhone)
             res.onSuccess { sched ->
                 currentSchedule = sched
-                val today = Clock.System.todayIn(TimeZone.Companion.currentSystemDefault())
+                val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
                 val day = DayResolver.pickDay(sched.days, today)
                 currentDayIndex = sched.days.indexOf(day)
 
@@ -85,7 +85,7 @@ class RoutesViewModel(
 
     private fun updateUiWithDay(day: ScheduledDay?) {
         val driverId = prefs.lastDriverId ?: return
-        val today = Clock.System.todayIn(TimeZone.Companion.currentSystemDefault())
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         
         // Sync completed parts set
         val completed = day?.parts?.filter {
@@ -119,12 +119,12 @@ class RoutesViewModel(
     }
 
     private fun refresh() {
-        loadData(forceRefresh = true)
+        loadData()
     }
 
     private fun togglePart(partNumber: Int, done: Boolean) {
         val driverId = _uiState.value.driverId
-        val today = Clock.System.todayIn(TimeZone.Companion.currentSystemDefault())
+        val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
         val date = _uiState.value.day?.date ?: today
 
         completion.setDone(driverId, date, partNumber, done)

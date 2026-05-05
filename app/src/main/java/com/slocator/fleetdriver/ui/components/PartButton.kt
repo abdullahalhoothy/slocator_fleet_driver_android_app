@@ -140,7 +140,7 @@ fun PartButton(
             imageVector = if (isDone) Icons.Default.Check else Icons.Default.Map,
             contentDescription = null,
             tint = if (isDone) BrandEmerald else Color.White,
-            modifier = Modifier.size(28.dp).alpha(targetAlpha)
+            modifier = Modifier.size(28.dp).alpha(targetAlpha).clickable(enabled = !isDone) { onOpenRoute() }
         )
     }
 }

@@ -9,7 +9,9 @@
     <string name="login_welcome">أهلاً بك</string>
     <string name="login_instruction">أدخل رقم جوالك لعرض مسارات اليوم</string>
     <string name="login_phone_label">رقم الجوال</string>
-    <string name="login_phone_hint">مثال: ٩٦٦٥XXXXXXXX+</string>
+    <string name="login_phone_hint">أدخل رقم جوالك</string>
+    <string name="login_manager_phone_label">رقم جوال المدير</string>
+    <string name="login_manager_phone_hint">أدخل رقم جوال المدير</string>
     <string name="login_button">متابعة</string>
     <string name="login_error_empty">الرجاء إدخال رقم الجوال</string>
     <string name="login_error_not_found">لا توجد مسارات لهذا الرقم. تحقق من الرقم وحاول مرة أخرى.</string>

@@ -119,16 +119,16 @@ fun LoginScreen(
             )
             Spacer(Modifier.height(32.dp))
 
-            // Phone number field — premium dark variant
+            // Manager Phone field
             OutlinedTextField(
-                value = phone,
+                value = managerPhone,
                 onValueChange = {
-                    phone = it
+                    managerPhone = it
                     if (localErr != null) localErr = null
                 },
                 singleLine = true,
-                label = { Text(stringResource(R.string.login_phone_label)) },
-                placeholder = { Text(stringResource(R.string.login_phone_hint)) },
+                label = { Text(stringResource(R.string.login_manager_phone_label)) },
+                placeholder = { Text(stringResource(R.string.login_manager_phone_hint)) },
                 textStyle = TextStyle(
                     fontSize = MaterialTheme.typography.titleLarge.fontSize,
                     fontWeight = FontWeight.SemiBold
@@ -154,15 +154,16 @@ fun LoginScreen(
 
             Spacer(Modifier.height(16.dp))
 
+            // Phone number field — premium dark variant
             OutlinedTextField(
-                value = managerPhone,
+                value = phone,
                 onValueChange = {
-                    managerPhone = it
+                    phone = it
                     if (localErr != null) localErr = null
                 },
                 singleLine = true,
-                label = { Text("Manager Phone") },
-                placeholder = { Text("Enter manager's phone") },
+                label = { Text(stringResource(R.string.login_phone_label)) },
+                placeholder = { Text(stringResource(R.string.login_phone_hint)) },
                 textStyle = TextStyle(
                     fontSize = MaterialTheme.typography.titleLarge.fontSize,
                     fontWeight = FontWeight.SemiBold

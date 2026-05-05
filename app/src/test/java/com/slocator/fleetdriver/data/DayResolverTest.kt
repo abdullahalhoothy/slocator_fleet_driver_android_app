@@ -1,6 +1,7 @@
 package com.slocator.fleetdriver.data
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 import kotlinx.datetime.LocalDate
 
@@ -18,5 +19,28 @@ class DayResolverTest {
         for ((header, expected) in cases) {
             assertEquals("Failed for $header", expected, DayResolver.parseHeaderDate(header))
         }
+    }
+
+    @Test
+    fun testPickDay_exactMatch() {
+        val days = listOf(
+            ScheduledDay("Day 1", LocalDate(2026, 5, 1), emptyList()),
+            ScheduledDay("Day 2", LocalDate(2026, 5, 2), emptyList()),
+            ScheduledDay("Day 3", LocalDate(2026, 5, 3), emptyList())
+        )
+        val today = LocalDate(2026, 5, 2)
+        val result = DayResolver.pickDay(days, today)
+        assertEquals(days[1], result)
+    }
+
+    @Test
+    fun testPickDay_noMatch_returnsNull() {
+        val days = listOf(
+            ScheduledDay("Day 1", LocalDate(2026, 5, 1), emptyList()),
+            ScheduledDay("Day 2", LocalDate(2026, 5, 2), emptyList())
+        )
+        val today = LocalDate(2026, 5, 3)
+        val result = DayResolver.pickDay(days, today)
+        assertNull("Should return null when there is no exact date match", result)
     }
 }

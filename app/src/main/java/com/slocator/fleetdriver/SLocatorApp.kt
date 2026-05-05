@@ -27,7 +27,6 @@ class SLocatorApp : Application() {
         }
 
         // 2. Sync AppCompat locales with our preference.
-        // This is important for the first launch to force Arabic.
         val targetTag = prefs.languageOverride ?: "ar"
         val current = AppCompatDelegate.getApplicationLocales()
         if (current.isEmpty || current.get(0)?.language != targetTag) {

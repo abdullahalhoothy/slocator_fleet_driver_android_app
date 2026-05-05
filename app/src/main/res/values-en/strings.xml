@@ -8,8 +8,10 @@
     <!-- Login -->
     <string name="login_welcome">Welcome</string>
     <string name="login_instruction">Enter your phone number to view today\'s routes</string>
-    <string name="login_phone_label">Phone Number</string>
-    <string name="login_phone_hint">e.g. +966 5X XXX XXXX</string>
+    <string name="login_phone_label">Driver Phone</string>
+    <string name="login_phone_hint">Enter Driver\'s Phone</string>
+    <string name="login_manager_phone_label">Manager Phone</string>
+    <string name="login_manager_phone_hint">Enter Manager\'s Phone</string>
     <string name="login_button">Continue</string>
     <string name="login_error_empty">Please enter your phone number</string>
     <string name="login_error_not_found">No routes found for this number. Check the number and try again.</string>
