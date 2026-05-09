@@ -7,7 +7,6 @@ import com.slocator.fleetdriver.ui.screens.LoginViewModel
 import com.slocator.fleetdriver.ui.screens.routesscreen.data.RoutesViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
-import org.koin.core.parameter.parametersOf
 import org.koin.dsl.module
 
 val appModule = module {
