@@ -13,14 +13,6 @@ val appModule = module {
     single { PreferencesStore(androidContext()) }
     single { RoutesRepository() }
     single { CompletionStore(androidContext()) }
-
-//    viewModel { (onToggleLanguage: () -> Unit) ->
-//        RoutesViewModel(get(), get(), get(), onToggleLanguage)
-//    }
-//    viewModel { (onLoginSuccess: (String) -> Unit, onToggleLanguage: () -> Unit) ->
-//        LoginViewModel(get(), get(), onLoginSuccess, onToggleLanguage)
-//    }
-
     viewModelOf(::RoutesViewModel)
     viewModelOf(::LoginViewModel)
 
