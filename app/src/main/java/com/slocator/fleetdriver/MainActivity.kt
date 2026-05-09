@@ -104,6 +104,8 @@ class MainActivity : AppCompatActivity() {
             // Prefer the Google Maps app, but fall back gracefully if it isn't installed.
             setPackage("com.google.android.apps.maps")
         }
+        Log.d("urlO", url)
+        Log.d("url", webUrl)
         if (intent.resolveActivity(packageManager) != null) {
             startActivity(intent)
         } else { // Fallback: any browser/maps app that can handle the URL.
