@@ -45,44 +45,7 @@ object DayResolver {
         "ديسمبر" to 12, "كانون الأول" to 12
     )
 
-//    private val FORMAT_DMY_SLASH = LocalDate.Format {
-//        day()
-//        char('/')
-//        monthNumber()
-//        char('/')
-//        year()
-//    }
-//
-//    private val FORMAT_DMY_DASH = LocalDate.Format {
-//        day()
-//        char('-')
-//        monthNumber()
-//        char('-')
-//        year()
-//    }
-//
-//    private val FORMAT_YMD_DASH = LocalDate.Format {
-//        year()
-//        char('-')
-//        monthNumber()
-//        char('-')
-//        day()
-//    }
-//
-//    private val FORMAT_DMY_DOT = LocalDate.Format {
-//        day()
-//        char('.')
-//        monthNumber()
-//        char('.')
-//        year()
-//    }
-//
-//    private val FORMATS = listOf(
-//        FORMAT_DMY_SLASH,
-//        FORMAT_DMY_DASH,
-//        FORMAT_YMD_DASH,
-//        FORMAT_DMY_DOT
-//    )
+
 
     fun parseHeaderDate(header: String?): LocalDate? {
         if (header.isNullOrBlank()) return null

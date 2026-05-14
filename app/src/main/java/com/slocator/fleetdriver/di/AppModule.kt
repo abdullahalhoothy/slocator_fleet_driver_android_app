@@ -6,19 +6,14 @@ import com.slocator.fleetdriver.data.RoutesRepository
 import com.slocator.fleetdriver.ui.screens.LoginViewModel
 import com.slocator.fleetdriver.ui.screens.routesscreen.data.RoutesViewModel
 import org.koin.android.ext.koin.androidContext
-import org.koin.androidx.viewmodel.dsl.viewModel
-import org.koin.core.parameter.parametersOf
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 
 val appModule = module {
     single { PreferencesStore(androidContext()) }
     single { RoutesRepository() }
     single { CompletionStore(androidContext()) }
+    viewModelOf(::RoutesViewModel)
+    viewModelOf(::LoginViewModel)
 
-    viewModel { (onToggleLanguage: () -> Unit) ->
-        RoutesViewModel(get(), get(), get(), onToggleLanguage)
-    }
-    viewModel { (onLoginSuccess: (String) -> Unit, onToggleLanguage: () -> Unit) ->
-        LoginViewModel(get(), get(), onLoginSuccess, onToggleLanguage)
-    }
 }

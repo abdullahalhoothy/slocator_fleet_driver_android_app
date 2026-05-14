@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.snapshots.SnapshotStateMap
 import kotlinx.datetime.LocalDate
+import androidx.core.content.edit
 
 /**
  * Per-driver-per-day part completion state.
@@ -33,10 +34,10 @@ class CompletionStore(context: Context) {
     fun setDone(driverId: String, date: LocalDate?, partNumber: Int, value: Boolean) {
         val k = key(driverId, date, partNumber)
         state[k] = value
-        prefs.edit().putBoolean(k, value).apply()
+        prefs.edit { putBoolean(k, value) }
     }
 
-    fun stateMap(): SnapshotStateMap<String, Boolean> = state
+
 
     fun key(driverId: String, date: LocalDate?, partNumber: Int): String =
         "$KEY_PREFIX|${driverId.trim()}|${date?.toString() ?: "-"}|$partNumber"
