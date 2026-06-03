@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
@@ -50,7 +49,6 @@ import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesUiState
 import com.slocator.fleetdriver.ui.theme.BrandEmerald
 import com.slocator.fleetdriver.ui.theme.BrandPurpleDim
 import com.slocator.fleetdriver.ui.theme.Obsidian
-import com.slocator.fleetdriver.ui.theme.ObsidianCard
 import com.slocator.fleetdriver.ui.theme.TextSecondary
 import kotlinx.datetime.number
 
