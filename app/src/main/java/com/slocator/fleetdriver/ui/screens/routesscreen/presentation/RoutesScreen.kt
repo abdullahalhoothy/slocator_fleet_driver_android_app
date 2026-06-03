@@ -300,7 +300,7 @@ private fun DateHeadline(
 @Composable
 private fun ProgressStrip(done: Int, total: Int) {
     if (total <= 0) return
-    val ratio = if (total == 0) 0f else done.toFloat() / total
+    val ratio = done.toFloat() / total
     Column(
         modifier = Modifier
             .fillMaxWidth()
