@@ -23,6 +23,21 @@ import com.slocator.fleetdriver.ui.theme.SLocatorTheme
 
 class MainActivity : AppCompatActivity() {
 
+    override fun attachBaseContext(newBase: android.content.Context) {
+        val prefs = newBase.getSharedPreferences("slocator_app", MODE_PRIVATE)
+        val targetTag = prefs.getString("language_override", "ar") ?: "ar"
+        
+        val locale = Locale.Builder().setLanguage(targetTag).build()
+        Locale.setDefault(locale)
+        
+        val config = android.content.res.Configuration(newBase.resources.configuration)
+        config.setLocale(locale)
+        config.setLayoutDirection(locale)
+        
+        val context = newBase.createConfigurationContext(config)
+        super.attachBaseContext(context)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         val app = application as SLocatorApp
         
