@@ -10,12 +10,12 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
@@ -33,6 +33,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -46,19 +48,26 @@ import com.slocator.fleetdriver.ui.components.PartButton
 import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesUiState
 import com.slocator.fleetdriver.ui.theme.BrandEmerald
 import com.slocator.fleetdriver.ui.theme.BrandPurpleDim
-import com.slocator.fleetdriver.ui.theme.ObsidianCard
+import com.slocator.fleetdriver.ui.theme.Obsidian
 import com.slocator.fleetdriver.ui.theme.TextSecondary
 import kotlinx.datetime.number
 
 @Preview
 @Composable
-fun RoutesScreen(state: RoutesUiState= RoutesUiState()) {
+fun RoutesScreen(state: RoutesUiState = RoutesUiState()) {
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(
+                brush = Brush.radialGradient(
+                    colors = listOf(BrandPurpleDim.copy(alpha = 0.25f), Obsidian),
+                    center = Offset.Unspecified,
+                    radius = 1200f
+                )
+            )
             .systemBarsPadding()
+            .imePadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             HeaderBar(
@@ -69,46 +78,55 @@ fun RoutesScreen(state: RoutesUiState= RoutesUiState()) {
                 onToggleLanguage = state.onToggleLanguage,
                 languageToggleLabel = state.languageToggleLabel
             )
-
             DateHeadline(
                 day = state.day,
-
                 hasPrevious = state.hasPreviousDay,
                 hasNext = state.hasNextDay,
                 onPrevious = state.onPreviousDay,
                 onNext = state.onNextDay,
-
             )
-
             if (state.errorBanner != null) {
-                ErrorBanner(text = state.errorBanner)
-            }
 
+                ErrorBanner(text = state.errorBanner)
+
+            }
             ProgressStrip(
                 done = state.parts.count(state.isPartDone),
                 total = state.parts.size
             )
 
-            if (state.parts.isEmpty()) {
-                EmptyState(text = stringResource(R.string.routes_no_today))
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    contentPadding = PaddingValues(
-                        top = 8.dp, bottom = 32.dp
-                    )
-                ) {
-                    items(state.parts, key = { "${state.day?.dayLabel}_${it.partNumber}" }) { part ->
-                        PartButton(
-                            partNumber = part.partNumber,
-                            stopCount = part.stopCount,
-                            isDone = state.isPartDone(part),
-                            onCheckedChange = { state.onTogglePart(part, it) },
-                            onOpenRoute = { state.onOpenRoute(part) }
-                        )
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 32.dp)
+            ) {
+
+
+
+
+
+                if (state.parts.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillParentMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            EmptyState(text = stringResource(R.string.routes_no_today))
+                        }
+                    }
+                } else {
+                    items(
+                        state.parts,
+                        key = { "${state.day?.dayLabel}_${it.partNumber}" }
+                    ) { part ->
+                        Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 7.dp)) {
+                            PartButton(
+                                partNumber = part.partNumber,
+                                stopCount = part.stopCount,
+                                isDone = state.isPartDone(part),
+                                onCheckedChange = { state.onTogglePart(part, it) },
+                                onOpenRoute = { state.onOpenRoute(part) }
+                            )
+                        }
                     }
                 }
             }
@@ -140,10 +158,10 @@ private fun HeaderBar(
 //                ),
 //            contentAlignment = Alignment.Center
 //        ) {
-            BrandLockup(
-                modifier = Modifier
-                    .size(44.dp)
-            )
+        BrandLockup(
+            modifier = Modifier
+                .size(44.dp)
+        )
 //        }
         Spacer(Modifier.size(12.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -197,7 +215,7 @@ private fun DateHeadline(
     onPrevious: () -> Unit = {},
     onNext: () -> Unit = {},
 
-) {
+    ) {
     val date = day?.date
     // Format date text as DD/MM/YYYY
     val dateText = if (date != null) {
@@ -219,7 +237,7 @@ private fun DateHeadline(
             style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 3.sp),
             color = BrandEmerald
         )
-        
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -233,15 +251,15 @@ private fun DateHeadline(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            
+
             Text(
                 text = dateText,
                 style = MaterialTheme.typography.displayLarge.copy(fontSize = 28.sp),
                 color = MaterialTheme.colorScheme.onBackground,
-                 textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp).weight(1f)
             )
-            
+
             IconButton(onClick = onNext, enabled = hasNext) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
@@ -282,7 +300,7 @@ private fun DateHeadline(
 @Composable
 private fun ProgressStrip(done: Int, total: Int) {
     if (total <= 0) return
-    val ratio = if (total == 0) 0f else done.toFloat() / total
+    val ratio = done.toFloat() / total
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -333,11 +351,15 @@ private fun EmptyState(text: String) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
+//            Box(
+//                modifier = Modifier
+//                    .size(72.dp)
+//                    .clip(CircleShape)
+//                    .background(ObsidianCard)
+//            )
+            BrandLockup(
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(ObsidianCard)
+                    .size(44.dp)
             )
             Spacer(Modifier.size(16.dp))
             Text(

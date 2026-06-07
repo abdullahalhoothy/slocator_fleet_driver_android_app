@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- English (secondary). -->
-    <string name="app_name">S-Locator Fleet Driver</string>
-    <string name="app_brand_short">S-LOCATOR</string>
+    <string name="app_name">S-Route Fleet Driver</string>
+    <string name="app_brand_short">S-ROUTE</string>
     <string name="app_brand_subtitle">Fleet Driver</string>
 
     <!-- Login -->
@@ -37,6 +37,7 @@
     <string name="error_no_maps">Google Maps isn\'t installed on this device.</string>
 
     <!-- Language toggle -->
+    <string name="lang_toggle_label">العربية</string>
     <string name="lang_toggle_to_ar">العربية</string>
     <string name="lang_toggle_to_en">English</string>
 

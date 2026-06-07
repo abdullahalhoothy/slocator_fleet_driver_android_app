@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Arabic (default / primary). -->
-    <string name="app_name">إس-لوكيتر سائق الأسطول</string>
-    <string name="app_brand_short">إس-لوكيتر</string>
+    <string name="app_name">إس-روت سائق الأسطول</string>
+    <string name="app_brand_short">إس-روت</string>
     <string name="app_brand_subtitle">سائق الأسطول</string>
 
     <!-- Login -->
@@ -37,11 +37,12 @@
     <string name="error_no_maps">تطبيق خرائط جوجل غير مثبت على هذا الجهاز.</string>
 
     <!-- Language toggle -->
+    <string name="lang_toggle_label">English</string>
     <string name="lang_toggle_to_ar">العربية</string>
     <string name="lang_toggle_to_en">English</string>
 
     <!-- Accessibility -->
-    <string name="cd_logo">شعار إس-لوكيتر</string>
+    <string name="cd_logo">شعار إس-روت</string>
     <string name="cd_checkbox_done">وضع علامة منجز</string>
     <string name="cd_language">تغيير اللغة</string>
 </resources>

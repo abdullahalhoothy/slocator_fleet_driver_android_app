@@ -10,24 +10,32 @@ import com.slocator.fleetdriver.data.RoutesRepository
 import com.slocator.fleetdriver.data.ScheduledDay
 import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesAction
 import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesUiState
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.todayIn
 import kotlin.time.Clock
 
+sealed class RoutesEvent {
+    object ToggleLanguage : RoutesEvent()
+}
+
 class RoutesViewModel(
     private val repo: RoutesRepository,
     private val prefs: PreferencesStore,
-    private val completion: CompletionStore,
-    private val onToggleLanguage: () -> Unit
+    private val completion: CompletionStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(RoutesUiState())
     val uiState: StateFlow<RoutesUiState> = _uiState.asStateFlow()
+
+    private val _events = Channel<RoutesEvent>()
+    val events = _events.receiveAsFlow()
 
     private var currentSchedule: DriverSchedule? = null
     private var currentDayIndex: Int = -1
@@ -36,30 +44,19 @@ class RoutesViewModel(
         loadData()
     }
 
-    fun handleAction(action: RoutesAction, langArLabel: String = "", langEnLabel: String = "") {
-        if (langArLabel.isNotEmpty() || langEnLabel.isNotEmpty()) {
-            updateLanguageLabel(langArLabel, langEnLabel)
-        }
-
+    fun handleAction(action: RoutesAction) {
         when (action) {
             is RoutesAction.TogglePart -> togglePart(action.part.partNumber, action.done)
             is RoutesAction.OpenRoute -> { /* Handled by Route component for navigation/intent */ }
             RoutesAction.Refresh -> refresh()
             RoutesAction.Logout -> logout()
             RoutesAction.ToggleLanguage -> {
-                onToggleLanguage()
-                updateLanguageLabel(langArLabel, langEnLabel)
+                viewModelScope.launch {
+                    _events.send(RoutesEvent.ToggleLanguage)
+                }
             }
             RoutesAction.PreviousDay -> switchDay(-1)
             RoutesAction.NextDay -> switchDay(1)
-        }
-    }
-
-    private fun updateLanguageLabel(ar: String, en: String) {
-        _uiState.update {
-            it.copy(
-                languageToggleLabel = if ((prefs.languageOverride ?: "ar") == "ar") en else ar
-            )
         }
     }
 
@@ -86,7 +83,7 @@ class RoutesViewModel(
     private fun updateUiWithDay(day: ScheduledDay?) {
         val driverId = prefs.lastDriverId ?: return
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-        
+
         // Sync completed parts set
         val completed = day?.parts?.filter {
             completion.isDone(driverId, day.date ?: today, it.partNumber)

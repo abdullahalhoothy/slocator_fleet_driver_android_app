@@ -9,6 +9,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.net.toUri
@@ -26,21 +27,21 @@ class MainActivity : AppCompatActivity() {
     override fun attachBaseContext(newBase: android.content.Context) {
         val prefs = newBase.getSharedPreferences("slocator_app", MODE_PRIVATE)
         val targetTag = prefs.getString("language_override", "ar") ?: "ar"
-        
+
         val locale = Locale.Builder().setLanguage(targetTag).build()
         Locale.setDefault(locale)
-        
+
         val config = android.content.res.Configuration(newBase.resources.configuration)
         config.setLocale(locale)
         config.setLayoutDirection(locale)
-        
+
         val context = newBase.createConfigurationContext(config)
         super.attachBaseContext(context)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val app = application as SLocatorApp
-        
+
 
         installSplashScreen()
         super.onCreate(savedInstanceState)
@@ -49,7 +50,7 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val targetTag = app.prefs.languageOverride ?: "ar"
             val layoutDirection = if (targetTag == "ar") LayoutDirection.Rtl else LayoutDirection.Ltr
-            
+
             CompositionLocalProvider(LocalLayoutDirection provides layoutDirection) {
                 SLocatorTheme {
                     AppRoot(
@@ -72,7 +73,7 @@ class MainActivity : AppCompatActivity() {
                 val wps = wpsStr.split("|").filter { it.isNotBlank() }
 
                 val builder = StringBuilder("https://www.google.com/maps/dir/")
-                
+
 
                 builder.append("/")
 
@@ -124,16 +125,19 @@ private fun AppRoot(
     onOpenMaps: (String) -> Unit
 ) {
     val nav = rememberNavController()
+    val startDest = remember { if (app.prefs.lastDriverId != null) "routes" else "login" }
 
     NavHost(
         navController = nav,
-        startDestination = if (app.prefs.lastDriverId != null) "routes" else "login"
+        startDestination = startDest
     ) {
         composable("login") {
             LoginRoute(
                 onLoginSuccess = {
-                    nav.navigate("routes") {
-                        popUpTo("login") { inclusive = true }
+                    if (nav.currentDestination?.route == "login") {
+                        nav.navigate("routes") {
+                            popUpTo("login") { inclusive = true }
+                        }
                     }
                 },
                 onToggleLanguage = { app.toggleLanguage() }
@@ -144,8 +148,10 @@ private fun AppRoot(
             RoutesRoute(
                 onOpenMaps = onOpenMaps,
                 onLogout = {
-                    nav.navigate("login") {
-                        popUpTo("routes") { inclusive = true }
+                    if (nav.currentDestination?.route == "routes") {
+                        nav.navigate("login") {
+                            popUpTo("routes") { inclusive = true }
+                        }
                     }
                 },
                 onToggleLanguage = { app.toggleLanguage() }
