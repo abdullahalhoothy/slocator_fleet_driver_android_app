@@ -14,6 +14,10 @@ data class RoutesUiState(
     val hasPreviousDay: Boolean = false,
     val hasNextDay: Boolean = false,
     val currentDayIndex: Int = 0,
+    // Route-tracking state
+    val isRouteActive: Boolean = false,
+    val isTrackingLoading: Boolean = false,
+    // Callbacks
     val onPreviousDay: () -> Unit = { },
     val onNextDay: () -> Unit = { },
     val isPartDone: (RoutePart) -> Boolean = { false },
@@ -21,5 +25,7 @@ data class RoutesUiState(
     val onOpenRoute: (RoutePart) -> Unit = { _ -> },
     val onRefresh: () -> Unit = { },
     val onLogout: () -> Unit = { },
-    val onToggleLanguage: () -> Unit = { }
+    val onToggleLanguage: () -> Unit = { },
+    val onStartRoute: () -> Unit = { },
+    val onEndRoute: () -> Unit = { }
 )

@@ -21,12 +21,17 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -47,6 +52,7 @@ import com.slocator.fleetdriver.ui.components.BrandLockup
 import com.slocator.fleetdriver.ui.components.PartButton
 import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesUiState
 import com.slocator.fleetdriver.ui.theme.BrandEmerald
+import com.slocator.fleetdriver.ui.theme.BrandEmeraldDim
 import com.slocator.fleetdriver.ui.theme.BrandPurpleDim
 import com.slocator.fleetdriver.ui.theme.Obsidian
 import com.slocator.fleetdriver.ui.theme.TextSecondary
@@ -93,6 +99,15 @@ fun RoutesScreen(state: RoutesUiState = RoutesUiState()) {
             ProgressStrip(
                 done = state.parts.count(state.isPartDone),
                 total = state.parts.size
+            )
+
+            // ── Route-tracking action buttons ────────────────────────────
+            TrackingActions(
+                isRouteActive = state.isRouteActive,
+                isLoading = state.isTrackingLoading,
+                onStartRoute = state.onStartRoute,
+                onEndRoute = state.onEndRoute,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
             )
 
             LazyColumn(
@@ -367,6 +382,81 @@ private fun EmptyState(text: String) {
                 style = MaterialTheme.typography.titleMedium,
                 color = TextSecondary
             )
+        }
+    }
+}
+
+@Composable
+private fun TrackingActions(
+    isRouteActive: Boolean,
+    isLoading: Boolean,
+    onStartRoute: () -> Unit,
+    onEndRoute: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (!isRouteActive) {
+            Button(
+                onClick = onStartRoute,
+                enabled = !isLoading,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BrandEmerald,
+                    disabledContainerColor = BrandEmeraldDim
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(Modifier.size(8.dp))
+                Text(
+                    text = stringResource(R.string.tracking_start_route),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        } else {
+            OutlinedButton(
+                onClick = onEndRoute,
+                enabled = !isLoading,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.error,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(Modifier.size(8.dp))
+                Text(
+                    text = stringResource(R.string.tracking_end_route),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
         }
     }
 }

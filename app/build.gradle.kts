@@ -95,6 +95,9 @@ dependencies {
     // Date/Time
     implementation(libs.kotlinx.datetime)
 
+    // Location tracking (FusedLocationProviderClient)
+    implementation(libs.play.services.location)
+
     // Tests
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

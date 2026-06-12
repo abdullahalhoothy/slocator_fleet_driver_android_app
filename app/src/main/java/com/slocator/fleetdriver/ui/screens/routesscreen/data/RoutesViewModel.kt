@@ -6,6 +6,7 @@ import com.slocator.fleetdriver.data.CompletionStore
 import com.slocator.fleetdriver.data.DayResolver
 import com.slocator.fleetdriver.data.DriverSchedule
 import com.slocator.fleetdriver.data.PreferencesStore
+import com.slocator.fleetdriver.data.RouteTrackingApi
 import com.slocator.fleetdriver.data.RoutesRepository
 import com.slocator.fleetdriver.data.ScheduledDay
 import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesAction
@@ -23,6 +24,8 @@ import kotlin.time.Clock
 
 sealed class RoutesEvent {
     object ToggleLanguage : RoutesEvent()
+    data class StartTrackingService(val driverPhone: String) : RoutesEvent()
+    object StopTrackingService : RoutesEvent()
 }
 
 class RoutesViewModel(
@@ -57,6 +60,8 @@ class RoutesViewModel(
             }
             RoutesAction.PreviousDay -> switchDay(-1)
             RoutesAction.NextDay -> switchDay(1)
+            RoutesAction.StartRoute -> startRoute()
+            RoutesAction.EndRoute -> endRoute()
         }
     }
 
@@ -101,7 +106,9 @@ class RoutesViewModel(
                 hasNextDay = currentDayIndex < (currentSchedule?.days?.size?.minus(1) ?: -1),
                 currentDayIndex = currentDayIndex,
                 onPreviousDay = { handleAction(RoutesAction.PreviousDay) },
-                onNextDay = { handleAction(RoutesAction.NextDay) }
+                onNextDay = { handleAction(RoutesAction.NextDay) },
+                onStartRoute = { handleAction(RoutesAction.StartRoute) },
+                onEndRoute = { handleAction(RoutesAction.EndRoute) }
             )
         }
     }
@@ -138,5 +145,69 @@ class RoutesViewModel(
 
     private fun logout() {
         prefs.lastDriverId = null
+    }
+
+    // ── Route-tracking ──────────────────────────────────────────────
+
+    private fun startRoute() {
+        val driverPhone = prefs.lastDriverId ?: return
+        val managerPhone = prefs.lastManagerPhone ?: return
+        val day = _uiState.value.day?.let { currentSchedule?.days?.indexOf(it)?.plus(1) } ?: 1
+
+        _uiState.update { it.copy(isTrackingLoading = true) }
+
+        viewModelScope.launch {
+            val result = RouteTrackingApi.startRoute(
+                driverPhone = driverPhone,
+                managerPhone = managerPhone,
+                day = day
+            )
+
+            result.onSuccess {
+                _uiState.update {
+                    it.copy(
+                        isRouteActive = true,
+                        isTrackingLoading = false,
+                        errorBanner = null
+                    )
+                }
+                _events.send(RoutesEvent.StartTrackingService(driverPhone))
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isTrackingLoading = false,
+                        errorBanner = error.message ?: "network"
+                    )
+                }
+            }
+        }
+    }
+
+    private fun endRoute() {
+        val driverPhone = prefs.lastDriverId ?: return
+
+        _uiState.update { it.copy(isTrackingLoading = true) }
+
+        viewModelScope.launch {
+            val result = RouteTrackingApi.endRoute(driverPhone)
+
+            result.onSuccess {
+                _uiState.update {
+                    it.copy(
+                        isRouteActive = false,
+                        isTrackingLoading = false,
+                        errorBanner = null
+                    )
+                }
+                _events.send(RoutesEvent.StopTrackingService)
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isTrackingLoading = false,
+                        errorBanner = error.message ?: "network"
+                    )
+                }
+            }
+        }
     }
 }

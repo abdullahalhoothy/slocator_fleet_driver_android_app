@@ -15,6 +15,8 @@ class RoutesRepository {
             try {
                 val url = URL("http://37.27.195.216:7080/driver_links")
                 val conn = url.openConnection() as HttpURLConnection
+                conn.connectTimeout = 10_000
+                conn.readTimeout = 10_000
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.setRequestProperty("Accept", "application/json")

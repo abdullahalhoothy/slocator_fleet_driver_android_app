@@ -31,6 +31,17 @@
     <string name="routes_last_synced">آخر مزامنة: %1$s</string>
     <string name="routes_completion_progress">تم إنجاز %1$d من %2$d</string>
 
+    <!-- Route tracking -->
+    <string name="tracking_start_route">بدء المسار</string>
+    <string name="tracking_end_route">إنهاء المسار</string>
+    <string name="tracking_channel_name">تتبع المسار</string>
+    <string name="tracking_notification_title">المسار قيد التنفيذ</string>
+    <string name="tracking_notification_text">جاري تتبع مسار التوصيل الخاص بك</string>
+    <string name="tracking_permission_denied">مطلوب إذن الموقع لتتبع المسار</string>
+    <string name="tracking_gps_off">يرجى تشغيل نظام تحديد المواقع (GPS) لبدء التتبع</string>
+    <string name="tracking_start_error">تعذر بدء المسار: %1$s</string>
+    <string name="tracking_end_error">تعذر إنهاء المسار: %1$s</string>
+
     <!-- Errors -->
     <string name="error_network">تعذر الاتصال بالخادم. سيتم عرض آخر مسارات محفوظة.</string>
     <string name="error_no_data">لا توجد مسارات متاحة حتى الآن.</string>
