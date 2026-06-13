@@ -1,16 +1,55 @@
-# Compiled class file
+# ─── Gradle ───────────────────────────────────────────────
+.gradle/
+build/
+*/build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/**/build/
+
+# ─── Android / IntelliJ IDEA ─────────────────────────────
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.nav/
+.nb-gradle/
+
+# ─── Kotlin ───────────────────────────────────────────────
+.kotlin/
+
+# ─── Android SDK / NDK ───────────────────────────────────
+local.properties
+*.apk
+*.aab
+*.ap_
+*.aab_mapping.txt
+*.dex
+*.keystore
+*.jks
+
+# ─── JNI / NDK ───────────────────────────────────────────
+*.so
+
+# ─── OS files ─────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ─── Compiled class files ────────────────────────────────
 *.class
 
-# Log file
+# ─── Logs & crash dumps ──────────────────────────────────
 *.log
+*.trace
+hs_err_pid*
+replay_pid*
 
-# BlueJ files
-*.ctxt
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
+# ─── Package files ───────────────────────────────────────
 *.jar
 *.war
 *.nar
@@ -19,9 +58,27 @@
 *.tar.gz
 *.rar
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-replay_pid*
+# ─── BlueJ ────────────────────────────────────────────────
+*.ctxt
 
-# Kotlin Gradle plugin data, see https://kotlinlang.org/docs/whatsnew20.html#new-directory-for-kotlin-data-in-gradle-projects
-.kotlin/
+# ─── Mobile Tools for Java (J2ME) ────────────────────────
+.mtj.tmp/
+
+# ─── Environment / secrets ───────────────────────────────
+.env
+.env.local
+*.properties
+!gradle.properties
+!gradle/lib.versions.toml
+
+# ─── Generated / transient HTML reports ──────────────────
+*.html
+!**/src/**/*.html
+clusters_map.html
+routes_map.html
+shops_map.html
+report.html
+
+# ─── Generated data files ────────────────────────────────
+savings.json
+routes.xlsx
