@@ -78,6 +78,9 @@ class RoutesViewModel(
                 val day = DayResolver.pickDay(sched.days, today)
                 currentDayIndex = sched.days.indexOf(day)
 
+                // Store report URLs from the response
+                _uiState.update { it.copy(reportUrls = sched.reportUrls) }
+
                 updateUiWithDay(day)
             }.onFailure {
                 _uiState.update { it.copy(isRefreshing = false, errorBanner = "network") }

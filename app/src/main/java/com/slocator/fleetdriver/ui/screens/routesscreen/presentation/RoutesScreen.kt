@@ -1,5 +1,6 @@
 package com.slocator.fleetdriver.ui.screens.routesscreen.presentation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,8 +23,11 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -32,6 +36,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -54,8 +59,11 @@ import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesUiState
 import com.slocator.fleetdriver.ui.theme.BrandEmerald
 import com.slocator.fleetdriver.ui.theme.BrandEmeraldDim
 import com.slocator.fleetdriver.ui.theme.BrandPurpleDim
+import com.slocator.fleetdriver.ui.theme.BrandPurpleLight
 import com.slocator.fleetdriver.ui.theme.Obsidian
+import com.slocator.fleetdriver.ui.theme.ObsidianCard
 import com.slocator.fleetdriver.ui.theme.TextSecondary
+import com.slocator.fleetdriver.data.ReportUrls
 import kotlinx.datetime.number
 
 @Preview
@@ -108,6 +116,12 @@ fun RoutesScreen(state: RoutesUiState = RoutesUiState()) {
                 onStartRoute = state.onStartRoute,
                 onEndRoute = state.onEndRoute,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
+            )
+
+            // ── Report quick-access buttons ─────────────────────────────
+            ReportButtons(
+                reportUrls = state.reportUrls,
+                onOpenReport = state.onOpenReport
             )
 
             LazyColumn(
@@ -456,6 +470,79 @@ private fun TrackingActions(
                     text = stringResource(R.string.tracking_end_route),
                     style = MaterialTheme.typography.labelLarge
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReportButtons(
+    reportUrls: ReportUrls,
+    onOpenReport: (String, String) -> Unit
+) {
+    val entries = listOfNotNull(
+        reportUrls.routesMapUrl?.let { url ->
+            Triple(url, stringResource(R.string.report_routes_map), Icons.Default.Map)
+        },
+        reportUrls.shopsMapUrl?.let { url ->
+            Triple(url, stringResource(R.string.report_shops_map), Icons.Default.Store)
+        },
+        reportUrls.clustersMapUrl?.let { url ->
+            Triple(url, stringResource(R.string.report_clusters_map), Icons.Default.Layers)
+        }
+    )
+
+    if (entries.isEmpty()) return
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.report_section_title),
+            style = MaterialTheme.typography.labelLarge,
+            color = TextSecondary,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        entries.forEach { (url, label, icon) ->
+            OutlinedCard(
+                onClick = { onOpenReport(url, label) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(
+                    1.dp,
+                    BrandPurpleDim.copy(alpha = 0.3f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = BrandPurpleLight,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.size(12.dp))
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                        contentDescription = null,
+                        tint = TextSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
             }
         }
     }

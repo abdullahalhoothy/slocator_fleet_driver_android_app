@@ -14,12 +14,17 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.core.net.toUri
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.slocator.fleetdriver.ui.screens.login.presentation.LoginRoute
+import com.slocator.fleetdriver.ui.screens.reportviewer.presentation.ReportViewerScreen
 import com.slocator.fleetdriver.ui.screens.routesscreen.presentation.RoutesRoute
 import com.slocator.fleetdriver.ui.theme.SLocatorTheme
+import java.net.URLDecoder
+import java.net.URLEncoder
 import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
@@ -154,7 +159,32 @@ private fun AppRoot(
                         }
                     }
                 },
-                onToggleLanguage = { app.toggleLanguage() }
+                onToggleLanguage = { app.toggleLanguage() },
+                onOpenReport = { url, title ->
+                    val encodedUrl = URLEncoder.encode(url, "UTF-8")
+                    val encodedTitle = URLEncoder.encode(title, "UTF-8")
+                    nav.navigate("report_viewer/$encodedUrl/$encodedTitle")
+                }
+            )
+        }
+
+        composable(
+            route = "report_viewer/{url}/{title}",
+            arguments = listOf(
+                navArgument("url") { type = NavType.StringType },
+                navArgument("title") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val url = URLDecoder.decode(
+                backStackEntry.arguments?.getString("url").orEmpty(), "UTF-8"
+            )
+            val title = URLDecoder.decode(
+                backStackEntry.arguments?.getString("title").orEmpty(), "UTF-8"
+            )
+            ReportViewerScreen(
+                url = url,
+                title = title,
+                onBack = { nav.popBackStack() }
             )
         }
     }

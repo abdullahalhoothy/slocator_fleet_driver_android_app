@@ -52,8 +52,16 @@
     <string name="lang_toggle_to_ar">العربية</string>
     <string name="lang_toggle_to_en">English</string>
 
+    <!-- Report viewer -->
+    <string name="report_section_title">التقارير</string>
+    <string name="report_routes_map">خريطة المسارات</string>
+    <string name="report_shops_map">خريطة المحلات</string>
+    <string name="report_clusters_map">خريطة المجموعات</string>
+    <string name="report_title_default">التقرير</string>
+
     <!-- Accessibility -->
     <string name="cd_logo">شعار إس-روت</string>
     <string name="cd_checkbox_done">وضع علامة منجز</string>
     <string name="cd_language">تغيير اللغة</string>
+    <string name="cd_back">رجوع</string>
 </resources>

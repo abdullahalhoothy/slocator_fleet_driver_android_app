@@ -12,7 +12,8 @@ import kotlinx.datetime.LocalDate
  */
 data class DriverSchedule(
     val driverId: String,
-    val days: List<ScheduledDay>
+    val days: List<ScheduledDay>,
+    val reportUrls: ReportUrls = ReportUrls(null, null, null)
 )
 
 data class ScheduledDay(
@@ -25,4 +26,13 @@ data class RoutePart(
     val partNumber: Int,             // 1-based — Part 1, Part 2, ...
     val mapsUrl: String,             // Full Google Maps directions URL
     val stopCount: Int               // approximate; counted from URL waypoints
+)
+
+/**
+ * URLs of the HTML reports returned alongside the driver schedule.
+ */
+data class ReportUrls(
+    val routesMapUrl: String?,
+    val shopsMapUrl: String?,
+    val clustersMapUrl: String?
 )

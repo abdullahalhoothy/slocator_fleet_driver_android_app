@@ -52,8 +52,16 @@
     <string name="lang_toggle_to_ar">العربية</string>
     <string name="lang_toggle_to_en">English</string>
 
+    <!-- Report viewer -->
+    <string name="report_section_title">Reports</string>
+    <string name="report_routes_map">Routes Map</string>
+    <string name="report_shops_map">Shops Map</string>
+    <string name="report_clusters_map">Clusters Map</string>
+    <string name="report_title_default">Report</string>
+
     <!-- Accessibility -->
     <string name="cd_logo">S-Locator logo</string>
     <string name="cd_checkbox_done">Mark as done</string>
     <string name="cd_language">Change language</string>
+    <string name="cd_back">Back</string>
 </resources>

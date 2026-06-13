@@ -31,6 +31,7 @@ fun RoutesRoute(
     onOpenMaps: (String) -> Unit,
     onLogout: () -> Unit,
     onToggleLanguage: () -> Unit,
+    onOpenReport: (url: String, title: String) -> Unit = { _, _ -> },
     viewModel: RoutesViewModel = koinViewModel()
 ) {
     val state by viewModel.uiState.collectAsState()
@@ -158,7 +159,8 @@ fun RoutesRoute(
                 } else {
                     checkGpsAndStartRoute(viewModel, context)
                 }
-            }
+            },
+            onOpenReport = { url, title -> onOpenReport(url, title) }
         )
     )
 }
