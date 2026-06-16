@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Arabic (default / primary). -->
-    <string name="app_name">إس-لوكيتر سائق الأسطول</string>
-    <string name="app_brand_short">إس-لوكيتر</string>
+    <string name="app_name">إس-روت سائق الأسطول</string>
+    <string name="app_brand_short">إس-روت</string>
     <string name="app_brand_subtitle">سائق الأسطول</string>
 
     <!-- Login -->
@@ -31,17 +31,37 @@
     <string name="routes_last_synced">آخر مزامنة: %1$s</string>
     <string name="routes_completion_progress">تم إنجاز %1$d من %2$d</string>
 
+    <!-- Route tracking -->
+    <string name="tracking_start_route">بدء المسار</string>
+    <string name="tracking_end_route">إنهاء المسار</string>
+    <string name="tracking_channel_name">تتبع المسار</string>
+    <string name="tracking_notification_title">المسار قيد التنفيذ</string>
+    <string name="tracking_notification_text">جاري تتبع مسار التوصيل الخاص بك</string>
+    <string name="tracking_permission_denied">مطلوب إذن الموقع لتتبع المسار</string>
+    <string name="tracking_gps_off">يرجى تشغيل نظام تحديد المواقع (GPS) لبدء التتبع</string>
+    <string name="tracking_start_error">تعذر بدء المسار: %1$s</string>
+    <string name="tracking_end_error">تعذر إنهاء المسار: %1$s</string>
+
     <!-- Errors -->
     <string name="error_network">تعذر الاتصال بالخادم. سيتم عرض آخر مسارات محفوظة.</string>
     <string name="error_no_data">لا توجد مسارات متاحة حتى الآن.</string>
     <string name="error_no_maps">تطبيق خرائط جوجل غير مثبت على هذا الجهاز.</string>
 
     <!-- Language toggle -->
+    <string name="lang_toggle_label">English</string>
     <string name="lang_toggle_to_ar">العربية</string>
     <string name="lang_toggle_to_en">English</string>
 
+    <!-- Report viewer -->
+    <string name="report_section_title">التقارير</string>
+    <string name="report_routes_map">خريطة المسارات</string>
+    <string name="report_shops_map">خريطة المحلات</string>
+    <string name="report_clusters_map">خريطة المجموعات</string>
+    <string name="report_title_default">التقرير</string>
+
     <!-- Accessibility -->
-    <string name="cd_logo">شعار إس-لوكيتر</string>
+    <string name="cd_logo">شعار إس-روت</string>
     <string name="cd_checkbox_done">وضع علامة منجز</string>
     <string name="cd_language">تغيير اللغة</string>
+    <string name="cd_back">رجوع</string>
 </resources>

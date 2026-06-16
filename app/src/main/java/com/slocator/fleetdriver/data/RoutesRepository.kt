@@ -13,8 +13,10 @@ class RoutesRepository {
     suspend fun fetchSchedule(driverPhone: String, managerPhone: String): Result<DriverSchedule> =
         withContext(Dispatchers.IO) {
             try {
-                val url = URL("http://37.27.195.216:7080/driver_links")
+                val url = URL("${BaseUrl.URL}/driver_links")
                 val conn = url.openConnection() as HttpURLConnection
+                conn.connectTimeout = 10_000
+                conn.readTimeout = 10_000
                 conn.requestMethod = "POST"
                 conn.setRequestProperty("Content-Type", "application/json")
                 conn.setRequestProperty("Accept", "application/json")
@@ -38,7 +40,19 @@ class RoutesRepository {
 
                     val jsonResponse = JSONObject(responseStr)
                     val routesArray = jsonResponse.optJSONArray("routes")
-                    
+
+                    // Parse report URLs from the top-level response.
+                    // The server may return "host" or "localhost" as the hostname;
+                    // patch it to the real BaseUrl so WebView can load the page.
+                    val reportUrls = ReportUrls(
+                        routesMapUrl = jsonResponse.optString("routes_map_url", null)
+                            .ifBlank { null }?.let { normalizeReportUrl(it) },
+                        shopsMapUrl = jsonResponse.optString("shops_map_url", null)
+                            .ifBlank { null }?.let { normalizeReportUrl(it) },
+                        clustersMapUrl = jsonResponse.optString("clusters_map_url", null)
+                            .ifBlank { null }?.let { normalizeReportUrl(it) }
+                    )
+
                     if (routesArray == null || routesArray.length() == 0) {
                         return@withContext Result.failure(Exception("No routes found"))
                     }
@@ -80,7 +94,13 @@ class RoutesRepository {
                     if (daysList.isEmpty()) {
                         Result.failure(Exception("No valid routes in payload"))
                     } else {
-                        Result.success(DriverSchedule(driverId = driverPhone, days = daysList))
+                        Result.success(
+                            DriverSchedule(
+                                driverId = driverPhone,
+                                days = daysList,
+                                reportUrls = reportUrls
+                            )
+                        )
                     }
                 } else {
                     Result.failure(Exception("HTTP Error: $responseCode"))
@@ -91,6 +111,20 @@ class RoutesRepository {
         }
 
    // fun lastSyncedAt(): Long? = System.currentTimeMillis()
+
+    /**
+     * Replaces a placeholder hostname ("host" or "localhost") in the report URL
+     * with the real server address from [BaseUrl.URL], so the WebView can load it.
+     * Needed only for local development and testing
+     *
+     * Example:
+     *   "http://host:7080/static/reports/foo.html"
+     *       → "http://37.27.195.216:7080/static/reports/foo.html"
+     */
+    private fun normalizeReportUrl(url: String): String {
+        return url
+            .replaceFirst("http://localhost:7080", BaseUrl.URL)
+    }
 
     /**
      * Cheap stop-count: Parses the 'api=1' format and counts waypoints + destination.

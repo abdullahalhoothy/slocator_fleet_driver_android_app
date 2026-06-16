@@ -1,4 +1,4 @@
-package com.slocator.fleetdriver.ui.screens
+package com.slocator.fleetdriver.ui.screens.login.data
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -6,17 +6,22 @@ import com.slocator.fleetdriver.data.PreferencesStore
 import com.slocator.fleetdriver.data.RoutesRepository
 import com.slocator.fleetdriver.ui.screens.login.domain.LoginAction
 import com.slocator.fleetdriver.ui.screens.login.domain.LoginUiState
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+sealed class LoginEvent {
+    data class Success(val phone: String) : LoginEvent()
+    object ToggleLanguage : LoginEvent()
+}
+
 class LoginViewModel(
     private val repo: RoutesRepository,
-    private val prefs: PreferencesStore,
-    private val onLoginSuccess: (String) -> Unit,
-    private val onToggleLanguage: () -> Unit
+    private val prefs: PreferencesStore
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(
@@ -28,54 +33,37 @@ class LoginViewModel(
     )
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
-    fun handleAction(action: LoginAction, messages: LoginMessages) {
-        updateLabels(messages.langArLabel, messages.langEnLabel)
+    private val _events = Channel<LoginEvent>()
+    val events = _events.receiveAsFlow()
+
+    fun handleAction(action: LoginAction) {
         when (action) {
             is LoginAction.Submit -> {
                 if (action.phone.isNotBlank() && action.managerPhone.isNotBlank()) {
-                    submit(action.phone, action.managerPhone, messages.notFoundMsg, messages.networkMsg)
+                    submit(action.phone, action.managerPhone)
                 }
             }
-            LoginAction.ToggleLanguage -> toggleLanguage(messages.langArLabel, messages.langEnLabel)
-            LoginAction.RefreshLabels -> { /* Just trigger updateLabels above */ }
+            LoginAction.ToggleLanguage -> {
+                viewModelScope.launch {
+                    _events.send(LoginEvent.ToggleLanguage)
+                }
+            }
+            LoginAction.RefreshLabels -> { }
         }
     }
 
-    private fun updateLabels(ar: String, en: String) {
-        _uiState.update { 
-            it.copy(
-                languageToggleLabel = if ((prefs.languageOverride ?: "ar") == "ar") en else ar
-            )
-        }
-    }
-
-    private fun submit(phone: String, managerPhone: String, notFound: String, network: String) {
+    private fun submit(phone: String, managerPhone: String) {
         if (_uiState.value.isLoading) return
         _uiState.update { it.copy(isLoading = true, errorText = null) }
         viewModelScope.launch {
             val res = repo.fetchSchedule(phone, managerPhone)
-            _uiState.update { it.copy(isLoading = false) }
-            res.onSuccess { sched ->
+            res.onSuccess { _ ->
                 prefs.lastDriverId = phone
                 prefs.lastManagerPhone = managerPhone
-                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
-                    onLoginSuccess(phone)
-                }
+                _events.send(LoginEvent.Success(phone))
             }.onFailure {
-                _uiState.update { it.copy(errorText = network) }
+                _uiState.update { it.copy(isLoading = false, errorText = "network") }
             }
         }
     }
-
-    private fun toggleLanguage(ar: String, en: String) {
-        onToggleLanguage()
-        updateLabels(ar, en)
-    }
 }
-
-data class LoginMessages(
-    val notFoundMsg: String,
-    val networkMsg: String,
-    val langArLabel: String,
-    val langEnLabel: String
-)

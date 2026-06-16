@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- English (secondary). -->
-    <string name="app_name">S-Locator Fleet Driver</string>
-    <string name="app_brand_short">S-LOCATOR</string>
+    <string name="app_name">S-Route Fleet Driver</string>
+    <string name="app_brand_short">S-ROUTE</string>
     <string name="app_brand_subtitle">Fleet Driver</string>
 
     <!-- Login -->
@@ -31,17 +31,37 @@
     <string name="routes_last_synced">Last synced: %1$s</string>
     <string name="routes_completion_progress">%1$d of %2$d completed</string>
 
+    <!-- Route tracking -->
+    <string name="tracking_start_route">Start Route</string>
+    <string name="tracking_end_route">End Route</string>
+    <string name="tracking_channel_name">Route tracking</string>
+    <string name="tracking_notification_title">Route in progress</string>
+    <string name="tracking_notification_text">Tracking your delivery route</string>
+    <string name="tracking_permission_denied">Location permission required for tracking</string>
+    <string name="tracking_gps_off">Please turn on GPS to start tracking</string>
+    <string name="tracking_start_error">Could not start route: %1$s</string>
+    <string name="tracking_end_error">Could not end route: %1$s</string>
+
     <!-- Errors -->
     <string name="error_network">Couldn\'t reach the server. Showing your last saved routes.</string>
     <string name="error_no_data">No routes available yet.</string>
     <string name="error_no_maps">Google Maps isn\'t installed on this device.</string>
 
     <!-- Language toggle -->
+    <string name="lang_toggle_label">العربية</string>
     <string name="lang_toggle_to_ar">العربية</string>
     <string name="lang_toggle_to_en">English</string>
+
+    <!-- Report viewer -->
+    <string name="report_section_title">Reports</string>
+    <string name="report_routes_map">Routes Map</string>
+    <string name="report_shops_map">Shops Map</string>
+    <string name="report_clusters_map">Clusters Map</string>
+    <string name="report_title_default">Report</string>
 
     <!-- Accessibility -->
     <string name="cd_logo">S-Locator logo</string>
     <string name="cd_checkbox_done">Mark as done</string>
     <string name="cd_language">Change language</string>
+    <string name="cd_back">Back</string>
 </resources>

@@ -70,13 +70,16 @@ fun BrandLogo(modifier: Modifier = Modifier, size: Dp = 64.dp) {
 }
 
 @Composable
-fun BrandLockup(modifier: Modifier = Modifier) {
+fun BrandLockup(
+    modifier: Modifier = Modifier,
+    size: Dp = 48.dp
+) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
-        BrandLogo(size = 76.dp)
+        BrandLogo(size = size)
         Spacer(Modifier.height(0.dp))
         Text(
             text = androidx.compose.ui.res.stringResource(id = R.string.app_brand_short),

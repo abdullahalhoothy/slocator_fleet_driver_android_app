@@ -10,4 +10,6 @@ sealed class RoutesAction {
     object ToggleLanguage : RoutesAction()
     object PreviousDay : RoutesAction()
     object NextDay : RoutesAction()
+    object StartRoute : RoutesAction()
+    object EndRoute : RoutesAction()
 }

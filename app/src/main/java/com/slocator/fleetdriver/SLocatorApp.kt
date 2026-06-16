@@ -37,10 +37,10 @@ class SLocatorApp : Application() {
     fun toggleLanguage() {
         val currentTag = prefs.languageOverride ?: "ar"
         val newTag = if (currentTag == "ar") "en" else "ar"
-        
-        // Update preference first
+
+        // Update preference
         prefs.languageOverride = newTag
-        
+
         // Update AppCompat locale (triggers Activity recreation)
         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(newTag))
     }

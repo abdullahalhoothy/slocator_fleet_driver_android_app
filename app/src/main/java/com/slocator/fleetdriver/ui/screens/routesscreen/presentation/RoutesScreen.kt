@@ -1,5 +1,6 @@
 package com.slocator.fleetdriver.ui.screens.routesscreen.presentation
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,29 +11,40 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBackIos
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material.icons.automirrored.filled.Logout
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
+import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Store
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -45,20 +57,31 @@ import com.slocator.fleetdriver.ui.components.BrandLockup
 import com.slocator.fleetdriver.ui.components.PartButton
 import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesUiState
 import com.slocator.fleetdriver.ui.theme.BrandEmerald
+import com.slocator.fleetdriver.ui.theme.BrandEmeraldDim
 import com.slocator.fleetdriver.ui.theme.BrandPurpleDim
+import com.slocator.fleetdriver.ui.theme.BrandPurpleLight
+import com.slocator.fleetdriver.ui.theme.Obsidian
 import com.slocator.fleetdriver.ui.theme.ObsidianCard
 import com.slocator.fleetdriver.ui.theme.TextSecondary
+import com.slocator.fleetdriver.data.ReportUrls
 import kotlinx.datetime.number
 
 @Preview
 @Composable
-fun RoutesScreen(state: RoutesUiState= RoutesUiState()) {
+fun RoutesScreen(state: RoutesUiState = RoutesUiState()) {
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(
+                brush = Brush.radialGradient(
+                    colors = listOf(BrandPurpleDim.copy(alpha = 0.25f), Obsidian),
+                    center = Offset.Unspecified,
+                    radius = 1200f
+                )
+            )
             .systemBarsPadding()
+            .imePadding()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             HeaderBar(
@@ -69,46 +92,70 @@ fun RoutesScreen(state: RoutesUiState= RoutesUiState()) {
                 onToggleLanguage = state.onToggleLanguage,
                 languageToggleLabel = state.languageToggleLabel
             )
-
             DateHeadline(
                 day = state.day,
-
                 hasPrevious = state.hasPreviousDay,
                 hasNext = state.hasNextDay,
                 onPrevious = state.onPreviousDay,
                 onNext = state.onNextDay,
-
             )
-
             if (state.errorBanner != null) {
-                ErrorBanner(text = state.errorBanner)
-            }
 
+                ErrorBanner(text = state.errorBanner)
+
+            }
             ProgressStrip(
                 done = state.parts.count(state.isPartDone),
                 total = state.parts.size
             )
 
-            if (state.parts.isEmpty()) {
-                EmptyState(text = stringResource(R.string.routes_no_today))
-            } else {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(horizontal = 20.dp),
-                    verticalArrangement = Arrangement.spacedBy(14.dp),
-                    contentPadding = PaddingValues(
-                        top = 8.dp, bottom = 32.dp
-                    )
-                ) {
-                    items(state.parts, key = { "${state.day?.dayLabel}_${it.partNumber}" }) { part ->
-                        PartButton(
-                            partNumber = part.partNumber,
-                            stopCount = part.stopCount,
-                            isDone = state.isPartDone(part),
-                            onCheckedChange = { state.onTogglePart(part, it) },
-                            onOpenRoute = { state.onOpenRoute(part) }
-                        )
+            // ── Route-tracking action buttons ────────────────────────────
+            TrackingActions(
+                isRouteActive = state.isRouteActive,
+                isLoading = state.isTrackingLoading,
+                onStartRoute = state.onStartRoute,
+                onEndRoute = state.onEndRoute,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
+            )
+
+            // ── Report quick-access buttons ─────────────────────────────
+            ReportButtons(
+                reportUrls = state.reportUrls,
+                onOpenReport = state.onOpenReport
+            )
+
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(bottom = 32.dp)
+            ) {
+
+
+
+
+
+                if (state.parts.isEmpty()) {
+                    item {
+                        Box(
+                            modifier = Modifier.fillParentMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            EmptyState(text = stringResource(R.string.routes_no_today))
+                        }
+                    }
+                } else {
+                    items(
+                        state.parts,
+                        key = { "${state.day?.dayLabel}_${it.partNumber}" }
+                    ) { part ->
+                        Box(modifier = Modifier.padding(horizontal = 20.dp, vertical = 7.dp)) {
+                            PartButton(
+                                partNumber = part.partNumber,
+                                stopCount = part.stopCount,
+                                isDone = state.isPartDone(part),
+                                onCheckedChange = { state.onTogglePart(part, it) },
+                                onOpenRoute = { state.onOpenRoute(part) }
+                            )
+                        }
                     }
                 }
             }
@@ -140,10 +187,10 @@ private fun HeaderBar(
 //                ),
 //            contentAlignment = Alignment.Center
 //        ) {
-            BrandLockup(
-                modifier = Modifier
-                    .size(44.dp)
-            )
+        BrandLockup(
+            modifier = Modifier
+                .size(44.dp)
+        )
 //        }
         Spacer(Modifier.size(12.dp))
         Column(modifier = Modifier.weight(1f)) {
@@ -197,7 +244,7 @@ private fun DateHeadline(
     onPrevious: () -> Unit = {},
     onNext: () -> Unit = {},
 
-) {
+    ) {
     val date = day?.date
     // Format date text as DD/MM/YYYY
     val dateText = if (date != null) {
@@ -219,7 +266,7 @@ private fun DateHeadline(
             style = MaterialTheme.typography.labelLarge.copy(letterSpacing = 3.sp),
             color = BrandEmerald
         )
-        
+
         Row(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center,
@@ -233,15 +280,15 @@ private fun DateHeadline(
                     modifier = Modifier.size(24.dp)
                 )
             }
-            
+
             Text(
                 text = dateText,
                 style = MaterialTheme.typography.displayLarge.copy(fontSize = 28.sp),
                 color = MaterialTheme.colorScheme.onBackground,
-                 textAlign = TextAlign.Center,
+                textAlign = TextAlign.Center,
                 modifier = Modifier.padding(horizontal = 16.dp).weight(1f)
             )
-            
+
             IconButton(onClick = onNext, enabled = hasNext) {
                 Icon(
                     imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
@@ -282,7 +329,7 @@ private fun DateHeadline(
 @Composable
 private fun ProgressStrip(done: Int, total: Int) {
     if (total <= 0) return
-    val ratio = if (total == 0) 0f else done.toFloat() / total
+    val ratio = done.toFloat() / total
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -333,11 +380,15 @@ private fun EmptyState(text: String) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Box(
+//            Box(
+//                modifier = Modifier
+//                    .size(72.dp)
+//                    .clip(CircleShape)
+//                    .background(ObsidianCard)
+//            )
+            BrandLockup(
                 modifier = Modifier
-                    .size(72.dp)
-                    .clip(CircleShape)
-                    .background(ObsidianCard)
+                    .size(44.dp)
             )
             Spacer(Modifier.size(16.dp))
             Text(
@@ -345,6 +396,154 @@ private fun EmptyState(text: String) {
                 style = MaterialTheme.typography.titleMedium,
                 color = TextSecondary
             )
+        }
+    }
+}
+
+@Composable
+private fun TrackingActions(
+    isRouteActive: Boolean,
+    isLoading: Boolean,
+    onStartRoute: () -> Unit,
+    onEndRoute: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        if (!isRouteActive) {
+            Button(
+                onClick = onStartRoute,
+                enabled = !isLoading,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BrandEmerald,
+                    disabledContainerColor = BrandEmeraldDim
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(Modifier.size(8.dp))
+                Text(
+                    text = stringResource(R.string.tracking_start_route),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        } else {
+            OutlinedButton(
+                onClick = onEndRoute,
+                enabled = !isLoading,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.outlinedButtonColors(
+                    contentColor = MaterialTheme.colorScheme.error
+                )
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.error,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = null,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+                Spacer(Modifier.size(8.dp))
+                Text(
+                    text = stringResource(R.string.tracking_end_route),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ReportButtons(
+    reportUrls: ReportUrls,
+    onOpenReport: (String, String) -> Unit
+) {
+    val entries = listOfNotNull(
+        reportUrls.routesMapUrl?.let { url ->
+            Triple(url, stringResource(R.string.report_routes_map), Icons.Default.Map)
+        },
+        reportUrls.shopsMapUrl?.let { url ->
+            Triple(url, stringResource(R.string.report_shops_map), Icons.Default.Store)
+        },
+        reportUrls.clustersMapUrl?.let { url ->
+            Triple(url, stringResource(R.string.report_clusters_map), Icons.Default.Layers)
+        }
+    )
+
+    if (entries.isEmpty()) return
+
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 4.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = stringResource(R.string.report_section_title),
+            style = MaterialTheme.typography.labelLarge,
+            color = TextSecondary,
+            modifier = Modifier.padding(top = 8.dp)
+        )
+
+        entries.forEach { (url, label, icon) ->
+            OutlinedCard(
+                onClick = { onOpenReport(url, label) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(
+                    1.dp,
+                    BrandPurpleDim.copy(alpha = 0.3f)
+                )
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = icon,
+                        contentDescription = null,
+                        tint = BrandPurpleLight,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.size(12.dp))
+                    Text(
+                        text = label,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.weight(1f)
+                    )
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                        contentDescription = null,
+                        tint = TextSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
         }
     }
 }

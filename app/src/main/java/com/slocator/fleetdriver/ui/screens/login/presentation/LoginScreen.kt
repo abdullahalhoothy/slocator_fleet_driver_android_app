@@ -10,10 +10,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.systemBarsPadding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -29,7 +33,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -62,6 +65,7 @@ fun LoginScreen(
     languageToggleLabel: String
 ) {
     val focus = LocalFocusManager.current
+    val scrollState = rememberScrollState()
     var phone by remember { mutableStateOf(initialPhone) }
     var managerPhone by remember { mutableStateOf(initialManagerPhone) }
     val emptyError = stringResource(R.string.login_error_empty)
@@ -79,30 +83,32 @@ fun LoginScreen(
                 )
             )
             .systemBarsPadding()
+            .imePadding()
     ) {
-        // Top-end language toggle. End is right in LTR, left in RTL.
-        TextButton(
-            onClick = onToggleLanguage,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(12.dp)
-        ) {
-            Text(
-                text = languageToggleLabel,
-                style = MaterialTheme.typography.labelLarge,
-                color = TextSecondary
-            )
-        }
-
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 28.dp)
-                .padding(top = 60.dp, bottom = 32.dp),
+                .verticalScroll(scrollState)
+                .padding(horizontal = 20.dp)
+                .padding(top = 16.dp, bottom = 16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            Spacer(Modifier.height(40.dp))
+            // Language toggle at the top
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                TextButton(
+                    onClick = onToggleLanguage,
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Text(
+                        text = languageToggleLabel,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = TextSecondary
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(16.dp))
             BrandLockup()
             Spacer(Modifier.height(56.dp))
 
@@ -138,9 +144,9 @@ fun LoginScreen(
                     imeAction = ImeAction.Next
                 ),
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 64.dp)
-                    .clip(RoundedCornerShape(16.dp)),
+                    .padding(vertical = 5.dp)
+                    .heightIn(min = 60.dp).widthIn(max=400.dp).fillMaxWidth()
+                ,
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = ObsidianCard,
                     unfocusedContainerColor = ObsidianCard,
@@ -172,10 +178,8 @@ fun LoginScreen(
                     keyboardType = KeyboardType.Phone,
                     imeAction = ImeAction.Go
                 ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 64.dp)
-                    .clip(RoundedCornerShape(16.dp)),
+                modifier = Modifier .padding(bottom = 5.dp)
+                    .heightIn(min = 60.dp).widthIn(max=400.dp).fillMaxWidth(),
                 colors = OutlinedTextFieldDefaults.colors(
                     focusedContainerColor = ObsidianCard,
                     unfocusedContainerColor = ObsidianCard,
@@ -209,7 +213,7 @@ fun LoginScreen(
                 },
                 enabled = !isLoading,
                 modifier = Modifier
-                    .fillMaxWidth()
+                    .widthIn(max=400.dp).fillMaxWidth()
                     .height(60.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = ButtonDefaults.buttonColors(
