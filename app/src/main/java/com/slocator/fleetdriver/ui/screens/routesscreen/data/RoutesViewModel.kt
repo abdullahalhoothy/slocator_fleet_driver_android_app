@@ -62,6 +62,16 @@ class RoutesViewModel(
             RoutesAction.NextDay -> switchDay(1)
             RoutesAction.StartRoute -> startRoute()
             RoutesAction.EndRoute -> endRoute()
+            is RoutesAction.AddNote -> postNote(action.text)
+            RoutesAction.OpenNoteDialog -> {
+                _uiState.update { it.copy(showNoteDialog = true, noteText = "") }
+            }
+            RoutesAction.DismissNoteDialog -> {
+                _uiState.update { it.copy(showNoteDialog = false, noteText = "") }
+            }
+            is RoutesAction.UpdateNoteText -> {
+                _uiState.update { it.copy(noteText = action.text) }
+            }
         }
     }
 
@@ -207,6 +217,36 @@ class RoutesViewModel(
                 _uiState.update {
                     it.copy(
                         isTrackingLoading = false,
+                        errorBanner = error.message ?: "network"
+                    )
+                }
+            }
+        }
+    }
+
+    // ── Note posting ────────────────────────────────────────────────
+
+    private fun postNote(noteText: String) {
+        val driverPhone = prefs.lastDriverId ?: return
+
+        _uiState.update { it.copy(isNoteSending = true) }
+
+        viewModelScope.launch {
+            val result = RouteTrackingApi.postNote(driverPhone, noteText)
+
+            result.onSuccess {
+                _uiState.update {
+                    it.copy(
+                        showNoteDialog = false,
+                        noteText = "",
+                        isNoteSending = false,
+                        errorBanner = null
+                    )
+                }
+            }.onFailure { error ->
+                _uiState.update {
+                    it.copy(
+                        isNoteSending = false,
                         errorBanner = error.message ?: "network"
                     )
                 }

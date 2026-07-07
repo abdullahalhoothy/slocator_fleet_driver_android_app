@@ -61,8 +61,9 @@ class LoginViewModel(
                 prefs.lastDriverId = phone
                 prefs.lastManagerPhone = managerPhone
                 _events.send(LoginEvent.Success(phone))
-            }.onFailure {
-                _uiState.update { it.copy(isLoading = false, errorText = "network") }
+            }.onFailure { e ->
+                val errorType = if (e.message?.contains("HTTP Error: 404") == true) "not_found" else "network"
+                _uiState.update { it.copy(isLoading = false, errorText = errorType) }
             }
         }
     }

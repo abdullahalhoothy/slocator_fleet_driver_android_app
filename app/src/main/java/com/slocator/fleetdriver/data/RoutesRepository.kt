@@ -1,5 +1,6 @@
 package com.slocator.fleetdriver.data
 
+import android.util.Log
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
@@ -13,6 +14,7 @@ class RoutesRepository {
     suspend fun fetchSchedule(driverPhone: String, managerPhone: String): Result<DriverSchedule> =
         withContext(Dispatchers.IO) {
             try {
+                Log.d("RoutesRepository", "Fetching schedule from: ${BaseUrl.URL}/driver_links")
                 val url = URL("${BaseUrl.URL}/driver_links")
                 val conn = url.openConnection() as HttpURLConnection
                 conn.connectTimeout = 10_000
@@ -33,10 +35,13 @@ class RoutesRepository {
                 }
 
                 val responseCode = conn.responseCode
+                Log.d("RoutesRepository", "Response code: $responseCode from /driver_links")
                 if (responseCode == HttpURLConnection.HTTP_OK) {
                     val reader = BufferedReader(InputStreamReader(conn.inputStream))
                     val responseStr = reader.readText()
                     reader.close()
+
+                    Log.d("RoutesRepository", "Response body: $responseStr")
 
                     val jsonResponse = JSONObject(responseStr)
                     val routesArray = jsonResponse.optJSONArray("routes")
@@ -45,11 +50,11 @@ class RoutesRepository {
                     // The server may return "host" or "localhost" as the hostname;
                     // patch it to the real BaseUrl so WebView can load the page.
                     val reportUrls = ReportUrls(
-                        routesMapUrl = jsonResponse.optString("routes_map_url", null)
+                        routesMapUrl = jsonResponse.optString("routes_map_url", "")
                             .ifBlank { null }?.let { normalizeReportUrl(it) },
-                        shopsMapUrl = jsonResponse.optString("shops_map_url", null)
+                        shopsMapUrl = jsonResponse.optString("shops_map_url", "")
                             .ifBlank { null }?.let { normalizeReportUrl(it) },
-                        clustersMapUrl = jsonResponse.optString("clusters_map_url", null)
+                        clustersMapUrl = jsonResponse.optString("clusters_map_url", "")
                             .ifBlank { null }?.let { normalizeReportUrl(it) }
                     )
 
@@ -103,9 +108,11 @@ class RoutesRepository {
                         )
                     }
                 } else {
+                    Log.w("RoutesRepository", "Request failed with HTTP $responseCode from /driver_links")
                     Result.failure(Exception("HTTP Error: $responseCode"))
                 }
             } catch (t: Throwable) {
+                Log.e("RoutesRepository", "Exception calling /driver_links: ${t.message}", t)
                 Result.failure(t)
             }
         }
@@ -122,6 +129,7 @@ class RoutesRepository {
      *       → "http://37.27.195.216:7080/static/reports/foo.html"
      */
     private fun normalizeReportUrl(url: String): String {
+        Log.d("RoutesRepository", "Normalizing report URL with base: ${BaseUrl.URL}")
         return url
             .replaceFirst("http://localhost:7080", BaseUrl.URL)
     }

@@ -18,6 +18,10 @@ data class RoutesUiState(
     // Route-tracking state
     val isRouteActive: Boolean = false,
     val isTrackingLoading: Boolean = false,
+    // Note dialog state
+    val showNoteDialog: Boolean = false,
+    val noteText: String = "",
+    val isNoteSending: Boolean = false,
     // Report URLs from the server response
     val reportUrls: ReportUrls = ReportUrls(null, null, null),
     // Callbacks
@@ -31,5 +35,9 @@ data class RoutesUiState(
     val onToggleLanguage: () -> Unit = { },
     val onStartRoute: () -> Unit = { },
     val onEndRoute: () -> Unit = { },
+    val onAddNote: () -> Unit = { },
+    val onDismissNote: () -> Unit = { },
+    val onNoteTextChange: (String) -> Unit = { },
+    val onSubmitNote: () -> Unit = { },
     val onOpenReport: (url: String, title: String) -> Unit = { _, _ -> }
 )
