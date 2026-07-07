@@ -27,7 +27,9 @@ import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Store
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -37,6 +39,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -115,6 +118,7 @@ fun RoutesScreen(state: RoutesUiState = RoutesUiState()) {
                 isLoading = state.isTrackingLoading,
                 onStartRoute = state.onStartRoute,
                 onEndRoute = state.onEndRoute,
+                onAddNote = state.onAddNote,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp)
             )
 
@@ -123,6 +127,17 @@ fun RoutesScreen(state: RoutesUiState = RoutesUiState()) {
                 reportUrls = state.reportUrls,
                 onOpenReport = state.onOpenReport
             )
+
+            // ── Note dialog ─────────────────────────────────────────────
+            if (state.showNoteDialog) {
+                NoteDialog(
+                    noteText = state.noteText,
+                    isSending = state.isNoteSending,
+                    onNoteTextChange = state.onNoteTextChange,
+                    onSubmit = state.onSubmitNote,
+                    onDismiss = state.onDismissNote
+                )
+            }
 
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
@@ -406,6 +421,7 @@ private fun TrackingActions(
     isLoading: Boolean,
     onStartRoute: () -> Unit,
     onEndRoute: () -> Unit,
+    onAddNote: () -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     Row(
@@ -468,6 +484,26 @@ private fun TrackingActions(
                 Spacer(Modifier.size(8.dp))
                 Text(
                     text = stringResource(R.string.tracking_end_route),
+                    style = MaterialTheme.typography.labelLarge
+                )
+            }
+
+            Button(
+                onClick = onAddNote,
+                modifier = Modifier.weight(1f),
+                shape = RoundedCornerShape(12.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BrandPurpleLight,
+                )
+            ) {
+                Icon(
+                    imageVector = Icons.Default.Edit,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(Modifier.size(8.dp))
+                Text(
+                    text = stringResource(R.string.tracking_add_note),
                     style = MaterialTheme.typography.labelLarge
                 )
             }
@@ -546,4 +582,79 @@ private fun ReportButtons(
             }
         }
     }
+}
+
+@Composable
+private fun NoteDialog(
+    noteText: String,
+    isSending: Boolean,
+    onNoteTextChange: (String) -> Unit,
+    onSubmit: () -> Unit,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = stringResource(R.string.note_dialog_title),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        },
+        text = {
+            Column {
+                Text(
+                    text = stringResource(R.string.note_dialog_hint),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = TextSecondary,
+                    modifier = Modifier.padding(bottom = 12.dp)
+                )
+                OutlinedTextField(
+                    value = noteText,
+                    onValueChange = onNoteTextChange,
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp),
+                    minLines = 3,
+                    maxLines = 5,
+                    placeholder = {
+                        Text(
+                            text = stringResource(R.string.note_dialog_placeholder),
+                            color = TextSecondary.copy(alpha = 0.5f)
+                        )
+                    },
+                    enabled = !isSending
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = onSubmit,
+                enabled = noteText.isNotBlank() && !isSending,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = BrandEmerald,
+                    disabledContainerColor = BrandEmeraldDim
+                )
+            ) {
+                if (isSending) {
+                    CircularProgressIndicator(
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 2.dp,
+                        modifier = Modifier.size(18.dp)
+                    )
+                    Spacer(Modifier.size(8.dp))
+                }
+                Text(text = stringResource(R.string.note_dialog_send))
+            }
+        },
+        dismissButton = {
+            TextButton(
+                onClick = onDismiss,
+                enabled = !isSending
+            ) {
+                Text(text = stringResource(R.string.note_dialog_cancel))
+            }
+        },
+        containerColor = ObsidianCard,
+        shape = RoundedCornerShape(16.dp)
+    )
 }

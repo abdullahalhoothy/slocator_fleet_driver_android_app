@@ -59,6 +59,14 @@
     <string name="report_clusters_map">Clusters Map</string>
     <string name="report_title_default">Report</string>
 
+    <!-- Note dialog -->
+    <string name="tracking_add_note">Add Note</string>
+    <string name="note_dialog_title">Add Note</string>
+    <string name="note_dialog_hint">Type your note below</string>
+    <string name="note_dialog_placeholder">Write a note…</string>
+    <string name="note_dialog_send">Send</string>
+    <string name="note_dialog_cancel">Cancel</string>
+
     <!-- Accessibility -->
     <string name="cd_logo">S-Locator logo</string>
     <string name="cd_checkbox_done">Mark as done</string>

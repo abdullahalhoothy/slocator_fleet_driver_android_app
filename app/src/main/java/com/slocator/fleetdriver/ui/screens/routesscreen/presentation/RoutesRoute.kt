@@ -17,6 +17,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import androidx.core.content.ContextCompat
 import com.slocator.fleetdriver.LocationTrackingService
@@ -160,6 +161,10 @@ fun RoutesRoute(
                     checkGpsAndStartRoute(viewModel, context)
                 }
             },
+            onAddNote = { viewModel.handleAction(RoutesAction.OpenNoteDialog) },
+            onDismissNote = { viewModel.handleAction(RoutesAction.DismissNoteDialog) },
+            onNoteTextChange = { viewModel.handleAction(RoutesAction.UpdateNoteText(it)) },
+            onSubmitNote = { viewModel.handleAction(RoutesAction.AddNote(state.noteText)) },
             onOpenReport = { url, title -> onOpenReport(url, title) }
         )
     )

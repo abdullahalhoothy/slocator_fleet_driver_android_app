@@ -59,6 +59,14 @@
     <string name="report_clusters_map">خريطة المجموعات</string>
     <string name="report_title_default">التقرير</string>
 
+    <!-- Note dialog -->
+    <string name="tracking_add_note">إضافة ملاحظة</string>
+    <string name="note_dialog_title">إضافة ملاحظة</string>
+    <string name="note_dialog_hint">اكتب ملاحظتك أدناه</string>
+    <string name="note_dialog_placeholder">اكتب ملاحظة…</string>
+    <string name="note_dialog_send">إرسال</string>
+    <string name="note_dialog_cancel">إلغاء</string>
+
     <!-- Accessibility -->
     <string name="cd_logo">شعار إس-روت</string>
     <string name="cd_checkbox_done">وضع علامة منجز</string>

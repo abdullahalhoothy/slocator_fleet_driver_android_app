@@ -109,6 +109,7 @@ class LocationTrackingService : Service() {
         if (location.accuracy > 50f) return
 
         try {
+            Log.d("LocationService", "Sending location ping to: ${BaseUrl.URL}/location")
             val url = URL("${BaseUrl.URL}/location")
             val conn = url.openConnection() as HttpURLConnection
             conn.connectTimeout = 5_000

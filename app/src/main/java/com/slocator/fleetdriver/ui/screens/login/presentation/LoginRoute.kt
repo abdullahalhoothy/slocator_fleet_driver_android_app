@@ -29,13 +29,18 @@ fun LoginRoute(
     }
 
     val networkMsg = stringResource(R.string.error_network)
+    val notFoundMsg = stringResource(R.string.login_error_not_found)
     val langToggleLabel = stringResource(R.string.lang_toggle_label)
 
     LoginScreen(
         initialPhone = state.initialPhone,
         initialManagerPhone = state.initialManagerPhone,
         isLoading = state.isLoading,
-        errorText = if (state.errorText == "network") networkMsg else state.errorText,
+        errorText = when (state.errorText) {
+            "network" -> networkMsg
+            "not_found" -> notFoundMsg
+            else -> state.errorText
+        },
         onSubmit = { phone, managerPhone -> viewModel.handleAction(LoginAction.Submit(phone, managerPhone)) },
         onToggleLanguage = { viewModel.handleAction(LoginAction.ToggleLanguage) },
         languageToggleLabel = langToggleLabel
