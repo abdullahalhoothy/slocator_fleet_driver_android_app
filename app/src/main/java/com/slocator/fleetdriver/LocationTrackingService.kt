@@ -16,16 +16,13 @@ import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
-import com.slocator.fleetdriver.data.BaseUrl
+import com.slocator.fleetdriver.data.PreferencesStore
+import com.slocator.fleetdriver.data.RouteTrackingApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import kotlin.time.Clock
-import org.json.JSONObject
-import java.io.OutputStreamWriter
-import java.net.HttpURLConnection
-import java.net.URL
 
 /**
  * Foreground service that continuously tracks the driver's location
@@ -37,35 +34,45 @@ class LocationTrackingService : Service() {
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
+    private lateinit var prefs: PreferencesStore
 
-    private var driverPhone: String = ""
+    private var driverId: String = ""
+    private var sessionId: String? = null
 
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     companion object {
         const val ACTION_START = "ACTION_START"
         const val ACTION_STOP = "ACTION_STOP"
-        const val EXTRA_DRIVER_PHONE = "EXTRA_DRIVER_PHONE"
         const val NOTIFICATION_ID = 1
         const val CHANNEL_ID = "location_tracking"
     }
 
     override fun onCreate() {
         super.onCreate()
+        prefs = PreferencesStore(this)
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         createNotificationChannel()
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
-            ACTION_START -> {
-                driverPhone = intent.getStringExtra(EXTRA_DRIVER_PHONE) ?: ""
-                startForeground(NOTIFICATION_ID, buildNotification())
-                startLocationUpdates()
-            }
             ACTION_STOP -> {
                 stopLocationUpdates()
                 stopSelf()
+                return START_NOT_STICKY
+            }
+            else -> {
+                // Read identity from prefs so a START_STICKY restart keeps working.
+                if (driverId.isBlank()) driverId = prefs.driverId.orEmpty()
+                if (sessionId == null) sessionId = prefs.sessionId
+                if (driverId.isBlank()) {
+                    Log.w("LocationService", "No driver id stored — stopping tracking service")
+                    stopSelf()
+                    return START_NOT_STICKY
+                }
+                startForeground(NOTIFICATION_ID, buildNotification())
+                if (!::locationCallback.isInitialized) startLocationUpdates()
             }
         }
         return START_STICKY
@@ -108,33 +115,31 @@ class LocationTrackingService : Service() {
         // Skip very inaccurate fixes
         if (location.accuracy > 50f) return
 
-        try {
-            Log.d("LocationService", "Sending location ping to: ${BaseUrl.URL}/location")
-            val url = URL("${BaseUrl.URL}/location")
-            val conn = url.openConnection() as HttpURLConnection
-            conn.connectTimeout = 5_000
-            conn.readTimeout = 5_000
-            conn.requestMethod = "POST"
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.doOutput = true
+        val id = driverId.ifBlank { prefs.driverId.orEmpty() }
+        if (id.isBlank()) return
 
-            val payload = JSONObject().apply {
-                put("driver_phone", driverPhone)
-                put("lat", location.latitude)
-                put("lng", location.longitude)
-                put("accuracy_m", location.accuracy)
-                put("timestamp", Clock.System.now().toString())
+        RouteTrackingApi.sendLocation(
+            driverId = id,
+            lat = location.latitude,
+            lng = location.longitude,
+            accuracyM = location.accuracy.toDouble(),
+            timestamp = Clock.System.now().toString()
+        ).onSuccess { response ->
+            // Keep the latest server-side session id (null = no active session).
+            response.sessionId?.let { newSessionId ->
+                if (newSessionId != sessionId) {
+                    sessionId = newSessionId
+                    prefs.sessionId = newSessionId
+                }
             }
-
-            OutputStreamWriter(conn.outputStream).use { it.write(payload.toString()) }
-
-            val code = conn.responseCode
-            conn.disconnect()
-
-            if (code !in 200..299) {
-                Log.w("LocationService", "Ping failed with HTTP $code")
+            response.transitions.forEach { transition ->
+                Log.i(
+                    "LocationService",
+                    "Proximity ${transition.eventType}: ${transition.poiName} " +
+                        "(customer=${transition.customerId}, ${transition.distanceM} m)"
+                )
             }
-        } catch (t: Throwable) {
+        }.onFailure { t ->
             Log.w("LocationService", "Ping failed: ${t.message}")
         }
     }

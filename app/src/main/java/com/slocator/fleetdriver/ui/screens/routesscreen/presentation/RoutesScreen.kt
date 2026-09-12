@@ -1,5 +1,7 @@
 package com.slocator.fleetdriver.ui.screens.routesscreen.presentation
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +30,9 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Store
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -40,24 +45,35 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.slocator.fleetdriver.R
+import com.slocator.fleetdriver.data.CustomerOut
 import com.slocator.fleetdriver.data.ScheduledDay
 import com.slocator.fleetdriver.ui.components.BrandLockup
 import com.slocator.fleetdriver.ui.components.PartButton
+import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesTab
 import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesUiState
 import com.slocator.fleetdriver.ui.theme.BrandEmerald
 import com.slocator.fleetdriver.ui.theme.BrandEmeraldDim
@@ -88,13 +104,27 @@ fun RoutesScreen(state: RoutesUiState = RoutesUiState()) {
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             HeaderBar(
-                driverId = state.driverId,
+                // Prefer the driver's name, then their phone number, and only fall
+                // back to the server id when neither is known.
+                driverLabel = state.driverName.ifBlank { state.driverPhone.ifBlank { state.driverId } },
                 isRefreshing = state.isRefreshing,
                 onRefresh = state.onRefresh,
                 onLogout = state.onLogout,
                 onToggleLanguage = state.onToggleLanguage,
                 languageToggleLabel = state.languageToggleLabel
             )
+            RoutesTabs(
+                selected = state.selectedTab,
+                onSelect = state.onSelectTab
+            )
+            if (state.selectedTab == RoutesTab.TERRITORIES) {
+                TerritoryList(
+                    locations = state.territoryLocations,
+                    isLoading = state.isTerritoriesLoading,
+                    onOpenLocation = state.onOpenLocation
+                )
+                return@Column
+            }
             DateHeadline(
                 day = state.day,
                 hasPrevious = state.hasPreviousDay,
@@ -166,6 +196,16 @@ fun RoutesScreen(state: RoutesUiState = RoutesUiState()) {
                             PartButton(
                                 partNumber = part.partNumber,
                                 stopCount = part.stopCount,
+                                title = part.customerName?.takeIf { it.isNotBlank() }
+                                    ?: stringResource(R.string.routes_part_label, part.partNumber),
+                                subtitle = part.plannedArrivalTime
+                                    ?.let { formatPlannedTime(it) }
+                                    ?.let { stringResource(R.string.routes_planned_arrival, it) }
+                                    ?: if (part.stopCount > 1) {
+                                        stringResource(R.string.routes_stops_count, part.stopCount)
+                                    } else {
+                                        stringResource(R.string.routes_open_in_maps)
+                                    },
                                 isDone = state.isPartDone(part),
                                 onCheckedChange = { state.onTogglePart(part, it) },
                                 onOpenRoute = { state.onOpenRoute(part) }
@@ -180,7 +220,7 @@ fun RoutesScreen(state: RoutesUiState = RoutesUiState()) {
 
 @Composable
 private fun HeaderBar(
-    driverId: String,
+    driverLabel: String,
     isRefreshing: Boolean,
     onRefresh: () -> Unit,
     onLogout: () -> Unit,
@@ -215,7 +255,7 @@ private fun HeaderBar(
                 color = TextSecondary
             )
             Text(
-                text = driverId,
+                text = driverLabel,
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                 color = MaterialTheme.colorScheme.onBackground
             )
@@ -525,59 +565,112 @@ private fun ReportButtons(
         },
         reportUrls.clustersMapUrl?.let { url ->
             Triple(url, stringResource(R.string.report_clusters_map), Icons.Default.Layers)
+        },
+        reportUrls.reportHtmlUrl?.let { url ->
+            Triple(url, stringResource(R.string.report_html_title), Icons.Default.Description)
         }
     )
 
     if (entries.isEmpty()) return
 
+    // Collapsed by default so the reports don't crowd the route list.
+    var expanded by rememberSaveable { mutableStateOf(false) }
+    val chevronRotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        label = "reportsChevron"
+    )
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = 20.dp, vertical = 4.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 20.dp, vertical = 4.dp)
     ) {
-        Text(
-            text = stringResource(R.string.report_section_title),
-            style = MaterialTheme.typography.labelLarge,
-            color = TextSecondary,
-            modifier = Modifier.padding(top = 8.dp)
-        )
-
-        entries.forEach { (url, label, icon) ->
-            OutlinedCard(
-                onClick = { onOpenReport(url, label) },
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(12.dp),
-                border = BorderStroke(
-                    1.dp,
-                    BrandPurpleDim.copy(alpha = 0.3f)
-                )
+        OutlinedCard(
+            onClick = { expanded = !expanded },
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, BrandPurpleDim.copy(alpha = 0.3f))
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
+                Icon(
+                    imageVector = Icons.Default.Description,
+                    contentDescription = null,
+                    tint = BrandPurpleLight,
+                    modifier = Modifier.size(22.dp)
+                )
+                Spacer(Modifier.size(12.dp))
+                Text(
+                    text = stringResource(R.string.report_section_title),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                Text(
+                    text = stringResource(R.string.reports_count, entries.size),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = TextSecondary
+                )
+                Spacer(Modifier.size(6.dp))
+                Icon(
+                    imageVector = Icons.Default.KeyboardArrowDown,
+                    contentDescription = stringResource(
+                        if (expanded) R.string.report_collapse else R.string.report_expand
+                    ),
+                    tint = TextSecondary,
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = icon,
-                        contentDescription = null,
-                        tint = BrandPurpleLight,
-                        modifier = Modifier.size(22.dp)
-                    )
-                    Spacer(Modifier.size(12.dp))
-                    Text(
-                        text = label,
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.weight(1f)
-                    )
-                    Icon(
-                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
-                        contentDescription = null,
-                        tint = TextSecondary,
-                        modifier = Modifier.size(16.dp)
-                    )
+                        .size(22.dp)
+                        .rotate(chevronRotation)
+                )
+            }
+        }
+
+        AnimatedVisibility(visible = expanded) {
+            Column(
+                modifier = Modifier.padding(top = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                entries.forEach { (url, label, icon) ->
+                    OutlinedCard(
+                        onClick = { onOpenReport(url, label) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        border = BorderStroke(
+                            1.dp,
+                            BrandPurpleDim.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 14.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = icon,
+                                contentDescription = null,
+                                tint = BrandPurpleLight,
+                                modifier = Modifier.size(22.dp)
+                            )
+                            Spacer(Modifier.size(12.dp))
+                            Text(
+                                text = label,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                modifier = Modifier.weight(1f)
+                            )
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                                contentDescription = null,
+                                tint = TextSecondary,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        }
+                    }
                 }
             }
         }
@@ -657,4 +750,139 @@ private fun NoteDialog(
         containerColor = ObsidianCard,
         shape = RoundedCornerShape(16.dp)
     )
+}
+
+/** "2026-09-11T08:30:00" -> "08:30" (best-effort; null when unparseable). */
+private fun formatPlannedTime(iso: String): String? {
+    val time = iso.substringAfter('T', "")
+    return if (time.length >= 5) time.substring(0, 5) else null
+}
+
+@Composable
+private fun RoutesTabs(
+    selected: RoutesTab,
+    onSelect: (RoutesTab) -> Unit
+) {
+    TabRow(
+        selectedTabIndex = selected.ordinal,
+        containerColor = Color.Transparent,
+        contentColor = BrandEmerald,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 4.dp)
+    ) {
+        RoutesTab.entries.forEach { tab ->
+            Tab(
+                selected = tab == selected,
+                onClick = { onSelect(tab) },
+                text = {
+                    Text(
+                        text = stringResource(
+                            when (tab) {
+                                RoutesTab.ROUTES -> R.string.tab_routes
+                                RoutesTab.TERRITORIES -> R.string.tab_territories
+                            }
+                        ),
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                },
+                selectedContentColor = BrandEmerald,
+                unselectedContentColor = TextSecondary
+            )
+        }
+    }
+}
+
+/**
+ * Territories tab: an unordered list of the driver's customer locations.
+ * Tapping a row opens that location in Google Maps.
+ */
+@Composable
+private fun TerritoryList(
+    locations: List<CustomerOut>,
+    isLoading: Boolean,
+    onOpenLocation: (CustomerOut) -> Unit
+) {
+    if (isLoading && locations.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            CircularProgressIndicator(color = BrandEmerald, strokeWidth = 2.dp)
+        }
+        return
+    }
+
+    if (locations.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text(
+                text = stringResource(R.string.territories_empty),
+                style = MaterialTheme.typography.titleMedium,
+                color = TextSecondary
+            )
+        }
+        return
+    }
+
+    LazyColumn(
+        modifier = Modifier.fillMaxSize(),
+        contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        item {
+            Text(
+                text = stringResource(R.string.territories_count, locations.size),
+                style = MaterialTheme.typography.labelMedium,
+                color = TextSecondary
+            )
+        }
+        items(locations, key = { it.customerId }) { customer ->
+            OutlinedCard(
+                onClick = { onOpenLocation(customer) },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                border = BorderStroke(1.dp, BrandPurpleDim.copy(alpha = 0.3f))
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Place,
+                        contentDescription = null,
+                        tint = BrandPurpleLight,
+                        modifier = Modifier.size(22.dp)
+                    )
+                    Spacer(Modifier.size(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = customer.name,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        val subtitle = listOfNotNull(customer.district, customer.city)
+                            .filter { it.isNotBlank() }
+                            .joinToString(" · ")
+                            .ifBlank { customer.address.orEmpty() }
+                        if (subtitle.isNotBlank()) {
+                            Text(
+                                text = subtitle,
+                                style = MaterialTheme.typography.labelMedium,
+                                color = TextSecondary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForwardIos,
+                        contentDescription = null,
+                        tint = TextSecondary,
+                        modifier = Modifier.size(16.dp)
+                    )
+                }
+            }
+        }
+    }
 }
