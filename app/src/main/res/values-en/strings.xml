@@ -10,11 +10,9 @@
     <string name="login_instruction">Enter your phone number to view today\'s routes</string>
     <string name="login_phone_label">Driver Phone</string>
     <string name="login_phone_hint">Enter Driver\'s Phone</string>
-    <string name="login_manager_phone_label">Manager Phone</string>
-    <string name="login_manager_phone_hint">Enter Manager\'s Phone</string>
     <string name="login_button">Continue</string>
     <string name="login_error_empty">Please enter your phone number</string>
-    <string name="login_error_not_found">No routes found for this number. Check the number and try again.</string>
+    <string name="login_error_not_found">No driver found for this number. Check the number and try again.</string>
     <string name="login_loading">Loading your routes…</string>
     <string name="login_offline_hint">No internet? Cached routes will still load.</string>
 
@@ -22,6 +20,7 @@
     <string name="routes_today_label">Today</string>
     <string name="routes_part_label">Part %1$d</string>
     <string name="routes_stops_count">%1$d stops</string>
+    <string name="routes_planned_arrival">Planned: %1$s</string>
     <string name="routes_done">Done</string>
     <string name="routes_open_in_maps">Open in Google Maps</string>
     <string name="routes_no_today">No routes scheduled for today.</string>
@@ -30,6 +29,14 @@
     <string name="routes_refreshing">Refreshing…</string>
     <string name="routes_last_synced">Last synced: %1$s</string>
     <string name="routes_completion_progress">%1$d of %2$d completed</string>
+
+    <!-- Tabs -->
+    <string name="tab_routes">Routes</string>
+    <string name="tab_territories">Territories</string>
+
+    <!-- Territories -->
+    <string name="territories_count">%1$d locations</string>
+    <string name="territories_empty">No locations.</string>
 
     <!-- Route tracking -->
     <string name="tracking_start_route">Start Route</string>
@@ -54,9 +61,13 @@
 
     <!-- Report viewer -->
     <string name="report_section_title">Reports</string>
+    <string name="reports_count">%1$d reports</string>
+    <string name="report_expand">Show reports</string>
+    <string name="report_collapse">Hide reports</string>
     <string name="report_routes_map">Routes Map</string>
     <string name="report_shops_map">Shops Map</string>
     <string name="report_clusters_map">Clusters Map</string>
+    <string name="report_html_title">Route Report</string>
     <string name="report_title_default">Report</string>
 
     <!-- Note dialog -->

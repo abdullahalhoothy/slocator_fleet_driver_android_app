@@ -57,17 +57,15 @@ import com.slocator.fleetdriver.ui.theme.TextSecondary
 @Composable
 fun LoginScreen(
     initialPhone: String = "",
-    initialManagerPhone: String = "",
     isLoading: Boolean = false,
     errorText: String? = null,
-    onSubmit: (String, String) -> Unit,
+    onSubmit: (String) -> Unit,
     onToggleLanguage: () -> Unit,
     languageToggleLabel: String
 ) {
     val focus = LocalFocusManager.current
     val scrollState = rememberScrollState()
     var phone by remember { mutableStateOf(initialPhone) }
-    var managerPhone by remember { mutableStateOf(initialManagerPhone) }
     val emptyError = stringResource(R.string.login_error_empty)
     var localErr by remember { mutableStateOf<String?>(null) }
     val visibleError = errorText ?: localErr
@@ -125,41 +123,6 @@ fun LoginScreen(
             )
             Spacer(Modifier.height(32.dp))
 
-            // Manager Phone field
-            OutlinedTextField(
-                value = managerPhone,
-                onValueChange = {
-                    managerPhone = it
-                    if (localErr != null) localErr = null
-                },
-                singleLine = true,
-                label = { Text(stringResource(R.string.login_manager_phone_label)) },
-                placeholder = { Text(stringResource(R.string.login_manager_phone_hint)) },
-                textStyle = TextStyle(
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    fontWeight = FontWeight.SemiBold
-                ),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Phone,
-                    imeAction = ImeAction.Next
-                ),
-                modifier = Modifier
-                    .padding(vertical = 5.dp)
-                    .heightIn(min = 60.dp).widthIn(max=400.dp).fillMaxWidth()
-                ,
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedContainerColor = ObsidianCard,
-                    unfocusedContainerColor = ObsidianCard,
-                    focusedBorderColor = BrandPurpleLight,
-                    unfocusedBorderColor = ObsidianOutline,
-                    cursorColor = BrandEmerald,
-                    focusedLabelColor = BrandPurpleLight,
-                    unfocusedLabelColor = TextSecondary
-                )
-            )
-
-            Spacer(Modifier.height(16.dp))
-
             // Phone number field — premium dark variant
             OutlinedTextField(
                 value = phone,
@@ -207,9 +170,8 @@ fun LoginScreen(
             Button(
                 onClick = {
                     val p = phone.trim()
-                    val mp = managerPhone.trim()
-                    if (p.isEmpty() || mp.isEmpty()) localErr = emptyError
-                    else { focus.clearFocus(); onSubmit(p, mp) }
+                    if (p.isEmpty()) localErr = emptyError
+                    else { focus.clearFocus(); onSubmit(p) }
                 },
                 enabled = !isLoading,
                 modifier = Modifier

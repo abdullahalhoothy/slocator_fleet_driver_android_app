@@ -96,12 +96,12 @@ fun RoutesRoute(
         viewModel.events.collect { event ->
             when (event) {
                 RoutesEvent.ToggleLanguage -> onToggleLanguage()
-                is RoutesEvent.StartTrackingService -> {
+                RoutesEvent.StartTrackingService -> {
                     // Permission + GPS already confirmed before the API call,
-                    // so start the service directly.
+                    // so start the service directly. The service reads the driver
+                    // id + session id from PreferencesStore.
                     val intent = Intent(context, LocationTrackingService::class.java).apply {
                         action = LocationTrackingService.ACTION_START
-                        putExtra(LocationTrackingService.EXTRA_DRIVER_PHONE, event.driverPhone)
                     }
                     ContextCompat.startForegroundService(context, intent)
                 }
@@ -132,9 +132,11 @@ fun RoutesRoute(
                 )
             },
             onOpenRoute = { part ->
-                // Mark the part as done when the user opens the map
-                viewModel.handleAction(RoutesAction.TogglePart(part, true))
-                onOpenMaps(part.mapsUrl)
+                part.mapsUrl?.let { url ->
+                    // Mark the part as done when the user opens the map
+                    viewModel.handleAction(RoutesAction.TogglePart(part, true))
+                    onOpenMaps(url)
+                }
             },
             onRefresh = { viewModel.handleAction(RoutesAction.Refresh) },
             onLogout = {
@@ -165,6 +167,8 @@ fun RoutesRoute(
             onDismissNote = { viewModel.handleAction(RoutesAction.DismissNoteDialog) },
             onNoteTextChange = { viewModel.handleAction(RoutesAction.UpdateNoteText(it)) },
             onSubmitNote = { viewModel.handleAction(RoutesAction.AddNote(state.noteText)) },
+            onSelectTab = { tab -> viewModel.handleAction(RoutesAction.SelectTab(tab)) },
+            onOpenLocation = { customer -> onOpenMaps(customer.mapsUrl) },
             onOpenReport = { url, title -> onOpenReport(url, title) }
         )
     )

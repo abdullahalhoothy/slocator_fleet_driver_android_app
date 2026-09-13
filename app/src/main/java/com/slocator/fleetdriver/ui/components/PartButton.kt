@@ -61,6 +61,8 @@ fun PartButton(
     modifier: Modifier = Modifier,
     partNumber: Int = 1 ,
     stopCount: Int = 2 ,
+    title: String? = null,
+    subtitle: String? = null,
     isDone: Boolean = false ,
     onCheckedChange: (Boolean) -> Unit = {},
     onOpenRoute: () -> Unit= {},
@@ -102,6 +104,8 @@ fun PartButton(
                 shape = RoundedCornerShape(22.dp)
             )
             .padding(horizontal = 18.dp, vertical = 10.dp)
+            // Whole row is tappable; the leading checkbox consumes its own taps first.
+            .clickable(enabled = !isDone) { onOpenRoute() }
     ) {
         // Checkbox is leading — RTL handles the visual flip automatically.
         DoneCheckbox(
@@ -120,12 +124,14 @@ fun PartButton(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = androidx.compose.ui.res.stringResource(R.string.routes_part_label, partNumber),
+                text = title ?: androidx.compose.ui.res.stringResource(R.string.routes_part_label, partNumber),
                 style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.ExtraBold, fontSize = 22.sp),
-                color = if (isDone) BrandEmerald else Color.White
+                color = if (isDone) BrandEmerald else Color.White,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
             Text(
-                text = if (stopCount > 0)
+                text = subtitle ?: if (stopCount > 0)
                     androidx.compose.ui.res.stringResource(R.string.routes_stops_count, stopCount)
                 else
                     androidx.compose.ui.res.stringResource(R.string.routes_open_in_maps),

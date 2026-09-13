@@ -12,6 +12,7 @@ sealed class RoutesAction {
     object NextDay : RoutesAction()
     object StartRoute : RoutesAction()
     object EndRoute : RoutesAction()
+    data class SelectTab(val tab: RoutesTab) : RoutesAction()
     data class AddNote(val text: String) : RoutesAction()
     object OpenNoteDialog : RoutesAction()
     object DismissNoteDialog : RoutesAction()

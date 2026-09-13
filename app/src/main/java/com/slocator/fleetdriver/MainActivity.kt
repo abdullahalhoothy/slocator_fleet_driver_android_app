@@ -70,7 +70,10 @@ class MainActivity : AppCompatActivity() {
     private fun convertApiUrlToWebUrl(apiUrl: String): String {
         try {
             val uri = apiUrl.toUri()
-            if (uri.getQueryParameter("api") == "1") {
+            // Only rewrite Google Maps *directions* links; other "api=1" links
+            // (e.g. /maps/search/?api=1&query=...) are passed through untouched.
+            val isDirections = uri.path?.contains("/dir") == true
+            if (isDirections && uri.getQueryParameter("api") == "1") {
                 val origin = uri.getQueryParameter("origin") ?: ""
                 val dest = uri.getQueryParameter("destination") ?: ""
                 val wpsStr = uri.getQueryParameter("waypoints") ?: ""
@@ -130,7 +133,7 @@ private fun AppRoot(
     onOpenMaps: (String) -> Unit
 ) {
     val nav = rememberNavController()
-    val startDest = remember { if (app.prefs.lastDriverId != null) "routes" else "login" }
+    val startDest = remember { if (app.prefs.driverId != null) "routes" else "login" }
 
     NavHost(
         navController = nav,

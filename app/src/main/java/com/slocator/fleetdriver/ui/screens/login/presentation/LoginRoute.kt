@@ -22,7 +22,7 @@ fun LoginRoute(
     LaunchedEffect(viewModel.events) {
         viewModel.events.collect { event ->
             when (event) {
-                is LoginEvent.Success -> onLoginSuccess(event.phone)
+                is LoginEvent.Success -> onLoginSuccess(event.driverId)
                 LoginEvent.ToggleLanguage -> onToggleLanguage()
             }
         }
@@ -34,14 +34,13 @@ fun LoginRoute(
 
     LoginScreen(
         initialPhone = state.initialPhone,
-        initialManagerPhone = state.initialManagerPhone,
         isLoading = state.isLoading,
         errorText = when (state.errorText) {
             "network" -> networkMsg
             "not_found" -> notFoundMsg
             else -> state.errorText
         },
-        onSubmit = { phone, managerPhone -> viewModel.handleAction(LoginAction.Submit(phone, managerPhone)) },
+        onSubmit = { phone -> viewModel.handleAction(LoginAction.Submit(phone)) },
         onToggleLanguage = { viewModel.handleAction(LoginAction.ToggleLanguage) },
         languageToggleLabel = langToggleLabel
     )

@@ -15,7 +15,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 sealed class LoginEvent {
-    data class Success(val phone: String) : LoginEvent()
+    data class Success(val driverId: String) : LoginEvent()
     object ToggleLanguage : LoginEvent()
 }
 
@@ -26,8 +26,7 @@ class LoginViewModel(
 
     private val _uiState = MutableStateFlow(
         LoginUiState(
-            initialPhone = prefs.lastDriverId.orEmpty(),
-            initialManagerPhone = prefs.lastManagerPhone.orEmpty(),
+            initialPhone = prefs.driverPhone.orEmpty(),
             languageToggleLabel = "" // Will be updated by Route
         )
     )
@@ -39,9 +38,7 @@ class LoginViewModel(
     fun handleAction(action: LoginAction) {
         when (action) {
             is LoginAction.Submit -> {
-                if (action.phone.isNotBlank() && action.managerPhone.isNotBlank()) {
-                    submit(action.phone, action.managerPhone)
-                }
+                if (action.phone.isNotBlank()) submit(action.phone)
             }
             LoginAction.ToggleLanguage -> {
                 viewModelScope.launch {
@@ -52,19 +49,20 @@ class LoginViewModel(
         }
     }
 
-    private fun submit(phone: String, managerPhone: String) {
+    private fun submit(phone: String) {
         if (_uiState.value.isLoading) return
         _uiState.update { it.copy(isLoading = true, errorText = null) }
         viewModelScope.launch {
-            val res = repo.fetchSchedule(phone, managerPhone)
-            res.onSuccess { _ ->
-                prefs.lastDriverId = phone
-                prefs.lastManagerPhone = managerPhone
-                _events.send(LoginEvent.Success(phone))
-            }.onFailure { e ->
-                val errorType = if (e.message?.contains("HTTP Error: 404") == true) "not_found" else "network"
-                _uiState.update { it.copy(isLoading = false, errorText = errorType) }
-            }
+            repo.resolveDriverId(phone)
+                .onSuccess { driverId ->
+                    prefs.driverPhone = phone
+                    prefs.driverId = driverId
+                    _events.send(LoginEvent.Success(driverId))
+                }
+                .onFailure { e ->
+                    val errorType = if (e.message?.contains("HTTP Error: 404") == true) "not_found" else "network"
+                    _uiState.update { it.copy(isLoading = false, errorText = errorType) }
+                }
         }
     }
 }

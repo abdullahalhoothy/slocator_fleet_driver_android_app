@@ -10,11 +10,9 @@
     <string name="login_instruction">أدخل رقم جوالك لعرض مسارات اليوم</string>
     <string name="login_phone_label">رقم الجوال</string>
     <string name="login_phone_hint">أدخل رقم جوالك</string>
-    <string name="login_manager_phone_label">رقم جوال المدير</string>
-    <string name="login_manager_phone_hint">أدخل رقم جوال المدير</string>
     <string name="login_button">متابعة</string>
     <string name="login_error_empty">الرجاء إدخال رقم الجوال</string>
-    <string name="login_error_not_found">لا توجد مسارات لهذا الرقم. تحقق من الرقم وحاول مرة أخرى.</string>
+    <string name="login_error_not_found">لا يوجد سائق بهذا الرقم. تحقق من الرقم وحاول مرة أخرى.</string>
     <string name="login_loading">جاري تحميل المسارات…</string>
     <string name="login_offline_hint">لا يوجد اتصال؟ ستُفتح المسارات المحفوظة.</string>
 
@@ -22,6 +20,7 @@
     <string name="routes_today_label">اليوم</string>
     <string name="routes_part_label">الجزء %1$d</string>
     <string name="routes_stops_count">%1$d توقفات</string>
+    <string name="routes_planned_arrival">الموعد المخطط: %1$s</string>
     <string name="routes_done">منجز</string>
     <string name="routes_open_in_maps">فتح في خرائط جوجل</string>
     <string name="routes_no_today">لا توجد مسارات مجدولة لليوم.</string>
@@ -30,6 +29,14 @@
     <string name="routes_refreshing">جاري التحديث…</string>
     <string name="routes_last_synced">آخر مزامنة: %1$s</string>
     <string name="routes_completion_progress">تم إنجاز %1$d من %2$d</string>
+
+    <!-- Tabs -->
+    <string name="tab_routes">المسارات</string>
+    <string name="tab_territories">المناطق</string>
+
+    <!-- Territories -->
+    <string name="territories_count">%1$d موقع</string>
+    <string name="territories_empty">لا توجد مواقع.</string>
 
     <!-- Route tracking -->
     <string name="tracking_start_route">بدء المسار</string>
@@ -54,9 +61,13 @@
 
     <!-- Report viewer -->
     <string name="report_section_title">التقارير</string>
+    <string name="reports_count">%1$d تقارير</string>
+    <string name="report_expand">عرض التقارير</string>
+    <string name="report_collapse">إخفاء التقارير</string>
     <string name="report_routes_map">خريطة المسارات</string>
     <string name="report_shops_map">خريطة المحلات</string>
     <string name="report_clusters_map">خريطة المجموعات</string>
+    <string name="report_html_title">تقرير المسار</string>
     <string name="report_title_default">التقرير</string>
 
     <!-- Note dialog -->

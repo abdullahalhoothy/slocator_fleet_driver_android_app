@@ -10,6 +10,7 @@ import com.slocator.fleetdriver.data.RouteTrackingApi
 import com.slocator.fleetdriver.data.RoutesRepository
 import com.slocator.fleetdriver.data.ScheduledDay
 import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesAction
+import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesTab
 import com.slocator.fleetdriver.ui.screens.routesscreen.doamin.RoutesUiState
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,7 +25,7 @@ import kotlin.time.Clock
 
 sealed class RoutesEvent {
     object ToggleLanguage : RoutesEvent()
-    data class StartTrackingService(val driverPhone: String) : RoutesEvent()
+    object StartTrackingService : RoutesEvent()
     object StopTrackingService : RoutesEvent()
 }
 
@@ -34,7 +35,9 @@ class RoutesViewModel(
     private val completion: CompletionStore
 ) : ViewModel() {
 
-    private val _uiState = MutableStateFlow(RoutesUiState())
+    private val _uiState = MutableStateFlow(
+        RoutesUiState(isRouteActive = prefs.sessionId != null)
+    )
     val uiState: StateFlow<RoutesUiState> = _uiState.asStateFlow()
 
     private val _events = Channel<RoutesEvent>()
@@ -45,6 +48,7 @@ class RoutesViewModel(
 
     init {
         loadData()
+        loadTerritories()
     }
 
     fun handleAction(action: RoutesAction) {
@@ -62,6 +66,7 @@ class RoutesViewModel(
             RoutesAction.NextDay -> switchDay(1)
             RoutesAction.StartRoute -> startRoute()
             RoutesAction.EndRoute -> endRoute()
+            is RoutesAction.SelectTab -> selectTab(action.tab)
             is RoutesAction.AddNote -> postNote(action.text)
             RoutesAction.OpenNoteDialog -> {
                 _uiState.update { it.copy(showNoteDialog = true, noteText = "") }
@@ -76,30 +81,31 @@ class RoutesViewModel(
     }
 
     private fun loadData() {
-        val driverId = prefs.lastDriverId ?: return
-        val managerPhone = prefs.lastManagerPhone ?: return
+        val driverId = prefs.driverId ?: return
 
         viewModelScope.launch {
             _uiState.update { it.copy(isRefreshing = true, errorBanner = null) }
-            val res = repo.fetchSchedule(driverId, managerPhone)
-            res.onSuccess { sched ->
-                currentSchedule = sched
-                val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
-                val day = DayResolver.pickDay(sched.days, today)
-                currentDayIndex = sched.days.indexOf(day)
+            repo.fetchSchedule(driverId)
+                .onSuccess { sched ->
+                    currentSchedule = sched
+                    val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
+                    // Exact date match first; otherwise fall back to the first planned day.
+                    val day = DayResolver.pickDay(sched.days, today) ?: sched.days.firstOrNull()
+                    currentDayIndex = sched.days.indexOf(day)
 
-                // Store report URLs from the response
-                _uiState.update { it.copy(reportUrls = sched.reportUrls) }
+                    // Store report URLs from the response
+                    _uiState.update { it.copy(reportUrls = sched.reportUrls) }
 
-                updateUiWithDay(day)
-            }.onFailure {
-                _uiState.update { it.copy(isRefreshing = false, errorBanner = "network") }
-            }
+                    updateUiWithDay(day)
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isRefreshing = false, errorBanner = "network") }
+                }
         }
     }
 
     private fun updateUiWithDay(day: ScheduledDay?) {
-        val driverId = prefs.lastDriverId ?: return
+        val driverId = prefs.driverId ?: return
         val today = Clock.System.todayIn(TimeZone.currentSystemDefault())
 
         // Sync completed parts set
@@ -110,6 +116,8 @@ class RoutesViewModel(
         _uiState.update {
             it.copy(
                 driverId = driverId,
+                driverName = currentSchedule?.driverName.orEmpty(),
+                driverPhone = prefs.driverPhone.orEmpty(),
                 day = day,
                 parts = day?.parts.orEmpty().mapIndexed { index, part -> part.copy(partNumber = index + 1) },
                 isRefreshing = false,
@@ -137,6 +145,35 @@ class RoutesViewModel(
 
     private fun refresh() {
         loadData()
+        loadTerritories()
+    }
+
+    private fun selectTab(tab: RoutesTab) {
+        _uiState.update { it.copy(selectedTab = tab) }
+        if (tab == RoutesTab.TERRITORIES && _uiState.value.territoryLocations.isEmpty()) {
+            loadTerritories()
+        }
+    }
+
+    private fun loadTerritories() {
+        val driverId = prefs.driverId ?: return
+        viewModelScope.launch {
+            _uiState.update { it.copy(isTerritoriesLoading = true) }
+            repo.fetchTerritories(driverId)
+                .onSuccess { territories ->
+                    // Territories are an unordered set of locations: flatten and
+                    // de-duplicate customers that appear in more than one territory.
+                    val locations = territories
+                        .flatMap { it.customers }
+                        .distinctBy { it.customerId }
+                    _uiState.update {
+                        it.copy(isTerritoriesLoading = false, territoryLocations = locations)
+                    }
+                }
+                .onFailure {
+                    _uiState.update { it.copy(isTerritoriesLoading = false) }
+                }
+        }
     }
 
     private fun togglePart(partNumber: Int, done: Boolean) {
@@ -157,100 +194,99 @@ class RoutesViewModel(
     }
 
     private fun logout() {
-        prefs.lastDriverId = null
+        prefs.driverId = null
+        prefs.driverPhone = null
+        prefs.sessionId = null
     }
 
     // ── Route-tracking ──────────────────────────────────────────────
 
     private fun startRoute() {
-        val driverPhone = prefs.lastDriverId ?: return
-        val managerPhone = prefs.lastManagerPhone ?: return
-        val day = _uiState.value.day?.let { currentSchedule?.days?.indexOf(it)?.plus(1) } ?: 1
+        val driverId = prefs.driverId ?: return
+        val routeDayId = _uiState.value.day?.routeDayId
 
         _uiState.update { it.copy(isTrackingLoading = true) }
 
         viewModelScope.launch {
-            val result = RouteTrackingApi.startRoute(
-                driverPhone = driverPhone,
-                managerPhone = managerPhone,
-                day = day
-            )
-
-            result.onSuccess {
-                _uiState.update {
-                    it.copy(
-                        isRouteActive = true,
-                        isTrackingLoading = false,
-                        errorBanner = null
-                    )
+            RouteTrackingApi.startRoute(driverId, routeDayId)
+                .onSuccess { response ->
+                    prefs.sessionId = response.sessionId
+                    _uiState.update {
+                        it.copy(
+                            isRouteActive = true,
+                            isTrackingLoading = false,
+                            errorBanner = null
+                        )
+                    }
+                    _events.send(RoutesEvent.StartTrackingService)
                 }
-                _events.send(RoutesEvent.StartTrackingService(driverPhone))
-            }.onFailure { error ->
-                _uiState.update {
-                    it.copy(
-                        isTrackingLoading = false,
-                        errorBanner = error.message ?: "network"
-                    )
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isTrackingLoading = false,
+                            errorBanner = error.message ?: "network"
+                        )
+                    }
                 }
-            }
         }
     }
 
     private fun endRoute() {
-        val driverPhone = prefs.lastDriverId ?: return
+        val driverId = prefs.driverId ?: return
 
         _uiState.update { it.copy(isTrackingLoading = true) }
 
         viewModelScope.launch {
-            val result = RouteTrackingApi.endRoute(driverPhone)
-
-            result.onSuccess {
-                _uiState.update {
-                    it.copy(
-                        isRouteActive = false,
-                        isTrackingLoading = false,
-                        errorBanner = null
-                    )
+            RouteTrackingApi.endRoute(driverId)
+                .onSuccess {
+                    prefs.sessionId = null
+                    _uiState.update {
+                        it.copy(
+                            isRouteActive = false,
+                            isTrackingLoading = false,
+                            errorBanner = null
+                        )
+                    }
+                    _events.send(RoutesEvent.StopTrackingService)
                 }
-                _events.send(RoutesEvent.StopTrackingService)
-            }.onFailure { error ->
-                _uiState.update {
-                    it.copy(
-                        isTrackingLoading = false,
-                        errorBanner = error.message ?: "network"
-                    )
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isTrackingLoading = false,
+                            errorBanner = error.message ?: "network"
+                        )
+                    }
                 }
-            }
         }
     }
 
     // ── Note posting ────────────────────────────────────────────────
 
     private fun postNote(noteText: String) {
-        val driverPhone = prefs.lastDriverId ?: return
+        val driverId = prefs.driverId ?: return
 
         _uiState.update { it.copy(isNoteSending = true) }
 
         viewModelScope.launch {
-            val result = RouteTrackingApi.postNote(driverPhone, noteText)
-
-            result.onSuccess {
-                _uiState.update {
-                    it.copy(
-                        showNoteDialog = false,
-                        noteText = "",
-                        isNoteSending = false,
-                        errorBanner = null
-                    )
+            RouteTrackingApi.postNote(driverId, noteText, prefs.sessionId)
+                .onSuccess {
+                    _uiState.update {
+                        it.copy(
+                            showNoteDialog = false,
+                            noteText = "",
+                            isNoteSending = false,
+                            errorBanner = null
+                        )
+                    }
                 }
-            }.onFailure { error ->
-                _uiState.update {
-                    it.copy(
-                        isNoteSending = false,
-                        errorBanner = error.message ?: "network"
-                    )
+                .onFailure { error ->
+                    _uiState.update {
+                        it.copy(
+                            isNoteSending = false,
+                            errorBanner = error.message ?: "network"
+                        )
+                    }
                 }
-            }
         }
     }
 }
